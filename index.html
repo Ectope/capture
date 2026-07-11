@@ -399,6 +399,23 @@
         }
         .overlay-close:hover { color: #eee; }
 
+        /* Safety notice. Deliberately always visible and never dismissible: this
+           is now on a public URL and can be found by people nobody has taught. */
+        .disclaimer {
+            max-width: 940px;
+            margin: 0 auto 14px;
+            padding: 9px 16px;
+            border: 1px solid #6a5a2a;
+            border-left: 4px solid #ffaa00;
+            border-radius: 6px;
+            background: rgba(255, 170, 0, 0.06);
+            color: #c9bda2;
+            font-size: 0.74rem;
+            line-height: 1.55;
+            text-align: center;
+        }
+        .disclaimer strong { color: #ffaa00; }
+
         /* Mode tabs: sandbox vs teaching */
         .mode-tabs {
             display: flex;
@@ -538,6 +555,14 @@
 <body>
     <h1>CAPTURE</h1>
     <p class="subtitle">Cardiac And Pacing Training Using Realistic Emulation</p>
+
+    <div class="disclaimer" role="note">
+        <strong>Simulation for education only — not for guiding patient care.</strong>
+        Every value, threshold and procedure here is a teaching approximation and must be
+        confirmed against your local policy and the manual of the device you are actually
+        using. Designed as an adjunct to experienced clinical instruction, not as a
+        standalone teaching aid.
+    </div>
 
     <div class="mode-tabs">
         <button class="mode-tab active" id="tabSandbox" data-mode="sandbox">Sandbox</button>
@@ -1116,6 +1141,42 @@ durations and the power-up defaults - should be confirmed against the
 manual of the specific pacemaker before being used for formal
 assessment. The refractory and blanking figures in particular are
 plausible values rather than device-verified numbers.
+
+
+IMPORTANT - SCOPE AND LIMITATIONS
+------------------------------------------------------------------------
+
+This is a simulation built for education. It is NOT a medical device, it
+is NOT validated for clinical use, and it must NOT be used to guide the
+care of a real patient.
+
+  1. Confirm everything locally. Every threshold, interval, safety
+     margin and procedure in this simulator must be checked against your
+     own unit's policy and the manual of the generator you actually use.
+     Devices differ. Where this simulator and your local policy disagree,
+     your local policy is right and this simulator is wrong.
+
+  2. It is an ADJUNCT, not a replacement. It is designed to be used
+     alongside experienced clinical instruction, with a supervisor in the
+     room who can correct it. It is not a standalone teaching aid and it
+     is not a substitute for supervised practice on the real device with
+     a real patient's safety in mind.
+
+  3. The device is generic. It is modelled on a typical dual-chamber
+     external pulse generator, not on any particular manufacturer's box.
+     Control layout, ranges, defaults and indicator behaviour vary. Some
+     scenarios depend on features a given generator may or may not have -
+     Scenario 10 (cross-talk), for instance, assumes the box has no
+     ventricular safety pacing, which many temporary units indeed lack
+     but some do not.
+
+  4. The physiology is simplified. It simulates at the level of cardiac
+     timing and events, which is the level at which pacemaker behaviour
+     operates and the level that matters for teaching. It is not a
+     cellular or biophysical model, and the waveform shapes are stylised.
+
+  5. Clinical decisions are not modelled. The simulator can tell you what
+     a box does. It cannot tell you what a patient needs.
     </script>
 
     <script>

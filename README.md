@@ -4,6 +4,27 @@ A temporary transvenous pacing simulator for ICU/CCU medical and nursing staff.
 
 **▶ Run it: https://ectope.github.io/capture/**
 
+> ### ⚠️ Simulation for education only — not for guiding patient care
+>
+> This is **not a medical device** and is **not validated for clinical use**. It must
+> not be used to guide the care of a real patient.
+>
+> - **Confirm everything locally.** Every threshold, interval, safety margin and
+>   procedure here is a teaching approximation. Check it against your own unit's
+>   policy and the manual of the generator you actually use. Devices differ. Where
+>   this simulator and your local policy disagree, **your local policy is right.**
+> - **It is an adjunct, not a replacement.** It is designed to be used alongside
+>   experienced clinical instruction, with a supervisor in the room who can correct
+>   it. It is not a standalone teaching aid.
+> - **The device is generic**, modelled on a typical dual-chamber external pulse
+>   generator rather than any particular manufacturer's. Some scenarios depend on
+>   features a given box may not have — Scenario 10 (cross-talk) assumes no
+>   ventricular safety pacing, which many temporary units lack but some do not.
+> - **The physiology is simplified**: it simulates cardiac *timing and events*, which
+>   is the level at which pacemaker behaviour operates. It is not a cellular model.
+>
+> The simulator can tell you what a box does. It cannot tell you what a patient needs.
+
 `index.html` is entirely self-contained — no server, no build step, no network. It
 can equally be downloaded and opened straight from disk, which is the point: it
 runs on a locked-down ward machine with no internet.
