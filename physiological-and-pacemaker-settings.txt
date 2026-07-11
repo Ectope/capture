@@ -1,0 +1,137 @@
+PHYSIOLOGICAL AND PACEMAKER SETTINGS
+CAPTURE - Cardiac And Pacing Training Using Realistic Emulation
+========================================================================
+
+
+IS IT SIMULATING, OR JUST DRAWING PICTURES?
+------------------------------------------------------------------------
+
+It is a genuine simulation, not a series of pictures.
+
+The core is a real-time, event-driven state machine that advances in
+small (~10 ms) steps and runs at normal (1x) real time. On each step it,
+in order:
+
+  1. fires any conducted ventricular beat that is due (only if the AV
+     node and ventricle have recovered);
+  2. advances the patient's own atrial pacemaker and, where relevant,
+     the ventricular escape focus;
+  3. runs the pacemaker's timing cycles for the selected mode, gated by
+     the refractory and blanking windows and by what the device is
+     currently allowed to sense.
+
+Every depolarisation - whether it arises from the patient's own
+conduction system or from a captured pacing stimulus - is produced as a
+discrete cardiac event. The ECG and arterial pressure traces are then
+drawn from those events. In other words, the timing, capture, sensing,
+conduction and inhibition are all genuinely computed; only the shapes of
+the individual waveforms are stylised templates. Adjusting the rate,
+output, sensitivity, a lead connection or the underlying rhythm causes
+the behaviour to re-derive live - nothing is a pre-recorded loop. The
+resulting behaviour can be checked automatically against the stream of
+cardiac events, which is only possible because the rhythm is genuinely
+simulated.
+
+What it is NOT: a cellular / ion-channel biophysical model. It simulates
+at the level of cardiac timing and events - which is the level
+at which pacemaker behaviour (demand pacing, atrial tracking, capture,
+fusion, refractory blanking) actually operates, and the level that
+matters for teaching.
+
+
+1. UNDERLYING RHYTHM PARAMETERS
+------------------------------------------------------------------------
+
+Rhythm            Atrial   Ventricular          AV          PR       Conduction
+                  rate     rate                 conduction  interval ratio
+------------------------------------------------------------------------------
+Sinus 40           40      40 (conducted)       yes         160 ms   1:1
+Sinus 80           80      80 (conducted)       yes         160 ms   1:1
+Sinus 120         120     120 (conducted)       yes         160 ms   1:1
+1st-degree HB      55      55 (conducted)       yes         320 ms   1:1
+2nd-degree 2:1     70      35 (every 2nd P)     yes         200 ms   2:1
+2nd-degree 3:1     75      25 (every 3rd P)     yes         200 ms   3:1
+Complete HB        75      30 (escape rhythm)   no          -        -
+Asystole            0       0 (no escape;       yes         160 ms   1:1
+                              conduction intact)
+
+Note: for the conducting rhythms the ventricular rate is an emergent
+result (atrial rate divided by the conduction ratio, after the PR
+delay), not an independent driver - the value shown is what that works
+out to. A ventricular escape focus only appears when AV conduction is
+absent (complete heart block). Asystole is modelled as sinus arrest with
+an intact conduction system.
+
+
+2. DEVICE TIMING AND DETECTION SETTINGS (fixed; shared by all modes)
+------------------------------------------------------------------------
+
+Setting                              Value     Role
+------------------------------------------------------------------------------
+Paced AV interval (PAV)              200 ms    atrial-pace to ventricular-pace delay
+Sensed AV interval (SAV)            180 ms    atrial-sense to ventricular-pace delay
+                                               (shorter than PAV; both longer than the
+                                               native PR so intact conduction inhibits)
+Post-ventricular atrial refractory  300 ms    blocks tracking of retrograde / far-field P
+Atrial refractory period            250 ms    after an atrial event
+Ventricular refractory period       250 ms    prevents T-wave oversensing
+Atrial blanking                     100 ms    sensing off briefly after an atrial event
+Ventricular blanking (post-vent)    120 ms    sensing off briefly after a ventricular event
+Ventricular blanking (post-A-pace)   20 ms    crosstalk guard after an atrial pace
+AV-node refractory (conduction)     300 ms    a native P this soon after a ventricular
+                                               event will not conduct (retrograde
+                                               concealment) - no beat in the refractory
+                                               period after a paced beat
+Atrial myocardial refractory        200 ms    a pace landing this soon after a
+                                               depolarisation cannot capture (pseudofusion)
+Ventricular myocardial refractory   250 ms    as above, for the ventricle
+Atrial capture threshold              2 mA    atrial output must reach this to capture
+Ventricular capture threshold         3 mA    ventricular output must reach this to capture
+Atrial signal amplitude               3 mV    atrial sensitivity number must be <= this to sense
+Ventricular signal amplitude          8 mV    ventricular sensitivity number must be <= this to sense
+
+
+3. WAVEFORM AND REPOLARISATION SETTINGS
+------------------------------------------------------------------------
+
+Setting                     Value
+------------------------------------------------------------------------------
+P-wave duration             80 ms
+Narrow (conducted) QRS      100 ms
+Wide (paced) QRS            160 ms
+Escape QRS                 180 ms
+QT interval                 rate-corrected (Bazett): scaling factor
+                            k = square root of (R-R interval / 750 ms),
+                            limited to the range 0.5 - 1.7
+Native T wave               onset 220 x k ms, width 145 x k ms, upright
+                            (gives a corrected QT of about 421 ms)
+Paced T wave                onset 250 x k ms, width 170 x k ms,
+                            discordant (inverted)
+Escape T wave               onset 300 x k ms, width 200 x k ms
+
+
+4. OPERATOR-PROGRAMMABLE SETTINGS
+------------------------------------------------------------------------
+
+Control            Range              Default
+------------------------------------------------------------------------------
+Rate               30 - 180 /min      80 /min
+Atrial output      0.1 - 25 mA        5.0 mA
+Ventricular output 0.1 - 25 mA        5.0 mA
+Atrial sensitivity 0.5 - 20 mV        2.0 mV
+Vent. sensitivity  0.5 - 20 mV        2.0 mV
+Mode               DDD, demoted to AAI / VVI / OFF via the lead switches
+                   (asynchronous DOO / VOO also supported)   DDD
+
+
+A NOTE ON THE VALUES
+------------------------------------------------------------------------
+
+These values are teaching-calibrated approximations, not figures
+verified against a specific device's technical manual. They are
+internally consistent and reproduce the correct qualitative behaviour,
+but several of them - particularly the exact refractory and blanking
+durations and the power-up defaults - should be confirmed against the
+manual of the specific pacemaker before being used for formal
+assessment. The refractory and blanking figures in particular are
+plausible values rather than device-verified numbers.

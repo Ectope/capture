@@ -1,0 +1,16 @@
+# Python (the optional Flask host)
+__pycache__/
+*.pyc
+.env
+venv/
+.venv/
+
+# Node (only used to run the test harnesses)
+node_modules/
+package-lock.json
+
+# macOS
+.DS_Store
+
+# Superseded working files
+templates/

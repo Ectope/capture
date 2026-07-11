@@ -1,0 +1,3246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAPTURE — Cardiac And Pacing Training Using Realistic Emulation</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 12px 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 4px;
+            color: #00d4aa;
+            letter-spacing: 3px;
+        }
+        .subtitle {
+            text-align: center;
+            margin-bottom: 12px;
+            color: #888;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+        /* Teaching mode adds a third column, so give it the room. */
+        .container.teaching {
+            max-width: 1800px;
+        }
+
+        /* Pacing Device Panel */
+        .pacing-box {
+            background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2a 100%);
+            border-radius: 16px;
+            padding: 20px;
+            min-width: 340px;
+            flex: 0 0 340px;
+            border: 2px solid #444;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .device-header {
+            background: #1a1a2a;
+            margin: -20px -20px 15px -20px;
+            padding: 15px 20px;
+            border-radius: 14px 14px 0 0;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .device-header .lead-status {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8rem;
+        }
+
+        .device-header .lead-status label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .device-header .lead-status input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* The async switch is a safety-relevant control: mark it out. */
+        .device-header .lead-status label.async-switch {
+            color: #ffaa00;
+            font-weight: 600;
+            padding-left: 10px;
+            border-left: 1px solid #444;
+        }
+
+        .device-header .mode-badge {
+            background: #cc0000;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .led-indicators {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #1a1a2a;
+            border-radius: 8px;
+        }
+
+        .led-channel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .led-label {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #ccc;
+        }
+
+        .led-pair {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .led {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .led-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #222;
+            border: 2px solid #444;
+            transition: all 0.05s;
+        }
+
+        .led.pace .led-dot {
+            background: #1a3a1a;
+        }
+
+        .led.pace.active .led-dot {
+            background: #00ff00;
+            box-shadow: 0 0 12px #00ff00, inset 0 0 4px #00ff00;
+        }
+
+        .led.sense .led-dot {
+            background: #1a1a3a;
+        }
+
+        .led.sense.active .led-dot {
+            background: #4488ff;
+            box-shadow: 0 0 12px #4488ff, inset 0 0 4px #4488ff;
+        }
+
+        .led-text {
+            font-size: 0.65rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .mode-display-box {
+            background: #1a1a2a;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            border: 1px solid #333;
+        }
+
+        .mode-display-box .label {
+            font-size: 0.65rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .mode-display-box .mode {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffaa00;
+            letter-spacing: 2px;
+        }
+
+        .pacing-indicators {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.7rem;
+            color: #666;
+        }
+
+        .pace-bar {
+            display: flex;
+            gap: 2px;
+        }
+
+        .pace-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #333;
+        }
+
+        .pace-dot.active {
+            background: #00ff00;
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 2px;
+        }
+
+        .control-group .value {
+            text-align: right;
+            font-weight: bold;
+            color: #00d4aa;
+            font-size: 0.9rem;
+        }
+
+        .section-label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            margin: 12px 0 8px;
+            border-top: 1px solid #333;
+            padding-top: 8px;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .rhythm-select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background: #1a1a2a;
+            color: #eee;
+            font-size: 0.85rem;
+        }
+
+        .pacing-box h2 {
+            display: none;
+        }
+
+        /* Monitor Panel */
+        .monitor {
+            flex: 1;
+            min-width: 500px;
+            background: #0a0a14;
+            border-radius: 12px;
+            padding: 20px;
+            border: 3px solid #333;
+        }
+        .monitor h2 {
+            color: #00ff00;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        .trace-container {
+            margin-bottom: 15px;
+        }
+        .trace-label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        canvas {
+            width: 100%;
+            border-radius: 4px;
+            background: #000;
+        }
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .status-item {
+            background: #1a1a2e;
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+        .status-item .label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+        .status-item .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .status-item .value.green { color: #00ff00; }
+        .status-item .value.yellow { color: #ffaa00; }
+        .status-item .value.red { color: #ff4444; }
+
+        /* Settings popup (self-contained; no server needed) */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            z-index: 1000;
+            padding: 30px;
+            overflow: auto;
+        }
+        .overlay.open {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        .overlay-panel {
+            background: #12121e;
+            border: 1px solid #333;
+            border-radius: 12px;
+            max-width: 900px;
+            width: 100%;
+            margin: auto;
+            padding: 20px 24px;
+            position: relative;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+        }
+        .overlay-panel pre {
+            white-space: pre;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 0.72rem;
+            line-height: 1.5;
+            color: #cfd3da;
+            margin-top: 6px;
+        }
+        .overlay-close {
+            position: absolute;
+            top: 8px;
+            right: 14px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.6rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .overlay-close:hover { color: #eee; }
+
+        /* Mode tabs: sandbox vs teaching */
+        .mode-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .mode-tab {
+            background: #2a2a3a;
+            color: #aaa;
+            border: 1px solid #444;
+            padding: 8px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: inherit;
+        }
+        .mode-tab:hover { color: #eee; }
+        .mode-tab.active {
+            background: #00d4aa;
+            color: #0a0a14;
+            border-color: #00d4aa;
+        }
+
+        /* Teaching-scenario panel: its own column, beside the monitor. */
+        .scenario-column {
+            flex: 0 0 340px;
+            background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2a 100%);
+            border: 2px solid #444;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            /* A long debrief scrolls inside the panel rather than growing the
+               page, so the vignette and the action buttons stay put. */
+            max-height: calc(100vh - 130px);
+            overflow-y: auto;
+        }
+        /* Three columns need 340 + 500 (monitor min) + 340 + gaps + body padding
+           = ~1260px. Below that the scenario column wraps underneath, so let it
+           take the full width rather than sitting in a narrow orphaned strip. */
+        @media (max-width: 1260px) {
+            .scenario-column { flex: 1 1 100%; max-height: none; }
+        }
+
+        .scenario-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 9px;
+            border: none;
+            border-radius: 6px;
+            background: #00d4aa;
+            color: #0a0a14;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .scenario-btn:hover { background: #00b894; }
+        .scenario-btn.secondary {
+            background: #2a2a3a;
+            color: #aaa;
+            border: 1px solid #444;
+        }
+        .scenario-btn.secondary:hover { background: #33334a; color: #eee; }
+        .instructor-note {
+            margin-top: 10px;
+            font-size: 0.7rem;
+            line-height: 1.5;
+            color: #888;
+            font-style: italic;
+        }
+        .scenario-btn.done {
+            background: #14342a;
+            color: #00d4aa;
+            border-color: #00d4aa;
+        }
+
+        .scenario-vignette {
+            margin-top: 14px;
+            padding: 12px;
+            background: #1a1a2a;
+            border-left: 3px solid #ffaa00;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            color: #ddd;
+            font-style: italic;
+        }
+        .scenario-objectives {
+            margin-top: 10px;
+            padding-left: 18px;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            color: #999;
+        }
+        .scenario-link {
+            display: inline-block;
+            margin-top: 12px;
+            color: #00d4aa;
+            font-size: 0.75rem;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+        .scenario-link:hover { text-decoration: underline; }
+        .scenario-debrief {
+            margin-top: 8px;
+            padding: 12px;
+            background: #141420;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            color: #bbb;
+        }
+        .scenario-debrief h4 {
+            color: #00d4aa;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .scenario-debrief h4:not(:first-child) { margin-top: 10px; }
+        .scenario-debrief ul { padding-left: 18px; }
+        .scenario-clock {
+            float: right;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: #666;
+            font-size: 0.7rem;
+            letter-spacing: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>CAPTURE</h1>
+    <p class="subtitle">Cardiac And Pacing Training Using Realistic Emulation</p>
+
+    <div class="mode-tabs">
+        <button class="mode-tab active" id="tabSandbox" data-mode="sandbox">Sandbox</button>
+        <button class="mode-tab" id="tabTeaching" data-mode="teaching">Teaching</button>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <!-- Pacing Device -->
+        <div class="pacing-box">
+            <h2 style="display: none;"></h2>
+
+            <div class="device-header">
+                <div class="lead-status">
+                    <label>
+                        <input type="checkbox" id="atrialLead" checked>
+                        A Lead
+                    </label>
+                    <label>
+                        <input type="checkbox" id="ventLead" checked>
+                        V Lead
+                    </label>
+                    <label class="async-switch" title="Asynchronous: pace blind on the timers, ignoring all sensed activity">
+                        <input type="checkbox" id="asyncSwitch">
+                        Async
+                    </label>
+                </div>
+                <div class="mode-badge" id="modeBadge">DDD</div>
+            </div>
+
+            <div class="led-indicators">
+                <div class="led-channel">
+                    <div class="led-label">A</div>
+                    <div class="led-pair">
+                        <div class="led pace">
+                            <div class="led-dot" id="ledAPace"></div>
+                            <div class="led-text">Pace</div>
+                        </div>
+                        <div class="led sense">
+                            <div class="led-dot" id="ledASense"></div>
+                            <div class="led-text">Sense</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="led-channel">
+                    <div class="led-label">V</div>
+                    <div class="led-pair">
+                        <div class="led pace">
+                            <div class="led-dot" id="ledVPace"></div>
+                            <div class="led-text">Pace</div>
+                        </div>
+                        <div class="led sense">
+                            <div class="led-dot" id="ledVSense"></div>
+                            <div class="led-text">Sense</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Rate</label>
+                <input type="range" id="rate" min="30" max="180" value="80">
+                <div class="value"><span id="rateValue">80</span> min<sup>-1</sup></div>
+            </div>
+
+            <div class="control-group">
+                <label>Upper Rate Limit</label>
+                <input type="range" id="upperRate" min="100" max="180" step="5" value="160">
+                <div class="value"><span id="upperRateValue">160</span> min<sup>-1</sup></div>
+            </div>
+
+            <div class="control-group">
+                <label>AV Interval</label>
+                <input type="range" id="avInterval" min="100" max="250" step="10" value="200">
+                <div class="value"><span id="avIntervalValue">200</span> ms</div>
+            </div>
+
+            <div class="control-group">
+                <label>PVARP</label>
+                <input type="range" id="pvarp" min="150" max="500" step="10" value="300">
+                <div class="value"><span id="pvarpValue">300</span> ms</div>
+            </div>
+
+            <div class="control-group">
+                <label>A Output</label>
+                <input type="range" id="aOutput" min="0.1" max="25" step="0.1" value="5">
+                <div class="value"><span id="aOutputValue">5.0</span> mA</div>
+            </div>
+
+            <div class="control-group">
+                <label>V Output</label>
+                <input type="range" id="vOutput" min="0.1" max="25" step="0.1" value="5">
+                <div class="value"><span id="vOutputValue">5.0</span> mA</div>
+            </div>
+
+            <div class="section-label">A Sensitivity</div>
+            <div class="control-group">
+                <label>Threshold (mV)</label>
+                <input type="range" id="aSensing" min="0.5" max="20" step="0.5" value="2">
+                <div class="value"><span id="aSensingValue">2.0</span> mV</div>
+            </div>
+
+            <div class="section-label">V Sensitivity</div>
+            <div class="control-group">
+                <label>Threshold (mV)</label>
+                <input type="range" id="vSensing" min="0.5" max="20" step="0.5" value="2">
+                <div class="value"><span id="vSensingValue">2.0</span> mV</div>
+            </div>
+
+            <!-- Sandbox: the underlying rhythm is chosen openly. -->
+            <div id="sandboxPanel">
+                <div class="section-label">Underlying Rhythm</div>
+                <div class="control-group" style="margin-bottom: 0;">
+                    <select class="rhythm-select" id="rhythmSelect">
+                        <option value="sinus40">Sinus Rhythm 40/min</option>
+                        <option value="sinus80" selected>Sinus Rhythm 80/min</option>
+                        <option value="sinus120">Sinus Rhythm 120/min</option>
+                        <option value="firstdegree">1st Degree HB</option>
+                        <option value="seconddegree21">2nd Degree HB 2:1</option>
+                        <option value="seconddegree31">2nd Degree HB 3:1</option>
+                        <option value="chb">Complete Heart Block</option>
+                        <option value="asystole">Asystole</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px; font-size: 0.7rem; color: #666; letter-spacing: 1px;">
+                Temporary Pacemaker
+            </div>
+        </div>
+
+        <!-- Monitor Display -->
+        <div class="monitor">
+            <h2>PATIENT MONITOR</h2>
+
+            <div class="trace-container">
+                <div class="trace-label">ECG Lead II</div>
+                <canvas id="ecgCanvas" height="150"></canvas>
+            </div>
+
+            <div class="trace-container">
+                <div class="trace-label">Arterial Line</div>
+                <canvas id="artCanvas" height="100"></canvas>
+            </div>
+
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="label">Heart Rate</div>
+                    <div class="value green" id="hrDisplay">80</div>
+                </div>
+                <div class="status-item">
+                    <div class="label">ABP</div>
+                    <div class="value green" id="bpDisplay">120/80</div>
+                </div>
+                <div class="status-item">
+                    <div class="label">Paced</div>
+                    <div class="value yellow" id="pacedDisplay">A+V</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teaching: its own column, so the vignette and the actions sit beside
+             the monitor and are readable without scrolling past the whole device.
+             The rhythm and the patient's thresholds are deliberately absent: the
+             trainee has to discover them through the box. -->
+        <div class="scenario-column" id="teachingPanel" style="display: none;">
+            <div class="section-label" style="margin-top: 0; border-top: none; padding-top: 0;">
+                Teaching Scenario
+                <span class="scenario-clock" id="scenarioClock"></span>
+            </div>
+            <select class="rhythm-select" id="scenarioSelect"></select>
+            <button class="scenario-btn" id="scenarioStart">Start scenario</button>
+            <button class="scenario-btn secondary" id="scenarioRestart" style="display: none;">Restart</button>
+            <div class="scenario-vignette" id="scenarioVignette" style="display: none;"></div>
+            <ul class="scenario-objectives" id="scenarioObjectives" style="display: none;"></ul>
+
+            <!-- Instructor-only, and collapsed by default. Clinical actions are
+                 deliberately NOT shown to the trainee: a visible button is a cue,
+                 and it hands over the very reasoning we are trying to assess. The
+                 trainee must say "I'd put the pads on" out loud; the instructor
+                 then makes it happen. -->
+            <a href="#" class="scenario-link" id="actionsToggle" style="display: none;">▸ Instructor controls</a>
+            <div id="scenarioActions" style="display: none;"></div>
+
+            <a href="#" class="scenario-link" id="debriefToggle" style="display: none;">▸ Reveal debrief (instructor)</a>
+            <div class="scenario-debrief" id="scenarioDebrief" style="display: none;"></div>
+        </div>
+    </div>
+
+    <footer style="display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 18px auto 0; padding-top: 12px; border-top: 1px solid #333;">
+        <a href="#" id="settingsLink"
+           style="color: #00d4aa; font-size: 0.8rem; letter-spacing: 0.5px; text-decoration: none;">
+            Physiological and pacemaker settings
+        </a>
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="text-align: right;">
+                <p style="color: #ccc; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px;">Tim Bowles</p>
+                <p style="margin-top: 2px; color: #888; font-size: 0.75rem; letter-spacing: 0.5px;">Feedback, bugs or errors:</p>
+            </div>
+            <a href="mailto:tim.bowles+CAPTURE@gmail.com?subject=CAPTURE%20feedback"
+               title="Scan to email feedback"
+               style="display: inline-block; background: #fff; padding: 7px; border-radius: 8px; line-height: 0;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" width="96" height="96" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h37v37H0z"/><path stroke="#000000" d="M2 2.5h7m2 0h2m5 0h1m3 0h4m2 0h7M2 3.5h1m5 0h1m2 0h2m1 0h2m1 0h2m4 0h1m4 0h1m5 0h1M2 4.5h1m1 0h3m1 0h1m1 0h1m2 0h1m2 0h2m2 0h1m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1M2 5.5h1m1 0h3m1 0h1m1 0h1m3 0h4m2 0h1m2 0h4m1 0h1m1 0h3m1 0h1M2 6.5h1m1 0h3m1 0h1m1 0h1m4 0h1m2 0h1m1 0h2m1 0h4m1 0h1m1 0h3m1 0h1M2 7.5h1m5 0h1m1 0h1m3 0h1m2 0h2m2 0h2m1 0h1m3 0h1m5 0h1M2 8.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M10 9.5h1m5 0h2m2 0h1m1 0h3M2 10.5h1m1 0h5m5 0h4m4 0h1m1 0h3m1 0h5M2 11.5h5m3 0h2m1 0h1m1 0h1m2 0h2m2 0h2m1 0h1m1 0h2m3 0h1m1 0h1M6 12.5h3m3 0h4m1 0h2m1 0h1m1 0h1m3 0h1m2 0h5M2 13.5h1m1 0h1m1 0h1m2 0h1m1 0h4m1 0h3m1 0h1m2 0h1m1 0h2m1 0h7M2 14.5h4m2 0h2m2 0h1m1 0h1m4 0h1m7 0h1m1 0h2M2 15.5h3m2 0h1m1 0h1m8 0h1m1 0h1m4 0h2m1 0h1m2 0h1m2 0h1M2 16.5h1m1 0h1m1 0h3m2 0h1m3 0h1m1 0h1m5 0h2m1 0h2m3 0h1m1 0h1M2 17.5h1m2 0h3m1 0h4m1 0h3m4 0h3m7 0h3M5 18.5h2m1 0h2m2 0h3m1 0h2m3 0h1m2 0h1m1 0h2m2 0h1m2 0h2M3 19.5h1m5 0h1m1 0h1m3 0h1m2 0h1m3 0h2m1 0h1m2 0h2m4 0h1M2 20.5h1m2 0h1m1 0h2m2 0h4m1 0h4m2 0h1m1 0h1m1 0h1m1 0h1m1 0h4M3 21.5h2m1 0h1m2 0h4m3 0h1m1 0h1m1 0h2m3 0h1m2 0h1m1 0h3m1 0h1M2 22.5h1m1 0h1m1 0h1m1 0h1m5 0h2m1 0h1m1 0h1m3 0h1m1 0h1m1 0h1m2 0h1m2 0h2M2 23.5h1m1 0h1m1 0h2m1 0h1m4 0h2m2 0h1m1 0h1m1 0h4m2 0h1m2 0h1m2 0h1M2 24.5h1m1 0h1m2 0h4m4 0h3m1 0h2m1 0h3m3 0h1m1 0h4M2 25.5h1m1 0h4m2 0h6m1 0h2m1 0h1m1 0h6m1 0h1m2 0h1M2 26.5h1m1 0h1m1 0h3m2 0h1m5 0h1m6 0h1m1 0h6m1 0h2M10 27.5h3m3 0h1m1 0h1m1 0h1m1 0h3m1 0h1m3 0h2m2 0h1M2 28.5h7m2 0h2m1 0h1m2 0h1m4 0h2m1 0h2m1 0h1m1 0h1m1 0h1M2 29.5h1m5 0h1m1 0h1m1 0h3m2 0h1m3 0h1m1 0h1m2 0h1m3 0h3M2 30.5h1m1 0h3m1 0h1m1 0h2m2 0h1m2 0h1m1 0h1m1 0h1m1 0h2m1 0h6m1 0h2M2 31.5h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m2 0h1m1 0h1m2 0h5m1 0h3m2 0h1M2 32.5h1m1 0h3m1 0h1m1 0h4m1 0h4m2 0h2m2 0h1m2 0h1m2 0h1M2 33.5h1m5 0h1m3 0h2m3 0h2m3 0h3m2 0h1m1 0h1m1 0h2M2 34.5h7m1 0h3m1 0h1m2 0h1m7 0h3m3 0h1m1 0h1"/></svg>
+            </a>
+        </div>
+    </footer>
+
+    <div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true">
+        <div class="overlay-panel">
+            <button class="overlay-close" id="settingsClose" aria-label="Close">&times;</button>
+            <pre id="settingsBody"></pre>
+        </div>
+    </div>
+
+    <script type="text/plain" id="settingsText">
+PHYSIOLOGICAL AND PACEMAKER SETTINGS
+CAPTURE - Cardiac And Pacing Training Using Realistic Emulation
+========================================================================
+
+
+IS IT SIMULATING, OR JUST DRAWING PICTURES?
+------------------------------------------------------------------------
+
+It is a genuine simulation, not a series of pictures.
+
+The core is a real-time, event-driven state machine that advances in
+small (~10 ms) steps and runs at normal (1x) real time. On each step it,
+in order:
+
+  1. fires any conducted ventricular beat that is due (only if the AV
+     node and ventricle have recovered);
+  2. advances the patient's own atrial pacemaker and, where relevant,
+     the ventricular escape focus;
+  3. runs the pacemaker's timing cycles for the selected mode, gated by
+     the refractory and blanking windows and by what the device is
+     currently allowed to sense.
+
+Every depolarisation - whether it arises from the patient's own
+conduction system or from a captured pacing stimulus - is produced as a
+discrete cardiac event. The ECG and arterial pressure traces are then
+drawn from those events. In other words, the timing, capture, sensing,
+conduction and inhibition are all genuinely computed; only the shapes of
+the individual waveforms are stylised templates. Adjusting the rate,
+output, sensitivity, a lead connection or the underlying rhythm causes
+the behaviour to re-derive live - nothing is a pre-recorded loop. The
+resulting behaviour can be checked automatically against the stream of
+cardiac events, which is only possible because the rhythm is genuinely
+simulated.
+
+What it is NOT: a cellular / ion-channel biophysical model. It simulates
+at the level of cardiac timing and events - which is the level
+at which pacemaker behaviour (demand pacing, atrial tracking, capture,
+fusion, refractory blanking) actually operates, and the level that
+matters for teaching.
+
+
+1. THE PATIENT MODEL (the ground truth)
+------------------------------------------------------------------------
+
+Everything the trainee must discover - the rhythm, whether there is an
+escape focus, the capture thresholds, the amplitude of the signals the
+sense amplifiers see - lives in a single "patient" object. Nothing on the
+device displays it; it is only ever consulted by the physics engine. The
+trainee can therefore only infer it from the traces and the indicators,
+which is the entire point.
+
+The sandbox rhythm menu and the teaching scenarios are two front doors
+that write into that same object, so a scenario needs no separate
+simulation path.
+
+Rhythm            Atrial   Ventricular          AV          PR       Conduction
+                  rate     rate                 conduction  interval ratio
+------------------------------------------------------------------------------
+Sinus 40           40      40 (conducted)       yes         160 ms   1:1
+Sinus 80           80      80 (conducted)       yes         160 ms   1:1
+Sinus 120         120     120 (conducted)       yes         160 ms   1:1
+1st-degree HB      55      55 (conducted)       yes         320 ms   1:1
+2nd-degree 2:1     70      35 (every 2nd P)     yes         200 ms   2:1
+2nd-degree 3:1     75      25 (every 3rd P)     yes         200 ms   3:1
+Complete HB        75      30 (escape rhythm)   no          -        -
+Asystole            0       0 (no escape;       yes         160 ms   1:1
+                              conduction intact)
+
+Note: for the conducting rhythms the ventricular rate is an emergent
+result (atrial rate divided by the conduction ratio, after the PR
+delay), not an independent driver - the value shown is what that works
+out to. Asystole is modelled as sinus arrest with an intact conduction
+system.
+
+Escape focus. Separately from AV conduction, the patient may have an
+escape focus, which fires only if nothing else has activated the
+ventricle first:
+
+  junctional     narrow QRS, no preceding P (supraventricular origin)
+  ventricular    wide, slow idioventricular QRS
+  none           no escape at all - the patient is PACING DEPENDENT, and
+                 loss of capture leaves asystole
+
+Patient capture and sensing truth (sandbox defaults; scenarios override
+these, and may change them during a scenario):
+
+  Atrial capture threshold        2 mA   atrial output must reach this to capture
+  Ventricular capture threshold   3 mA   ventricular output must reach this to capture
+  Atrial signal amplitude         3 mV   atrial sensitivity number must be <= this to sense
+  Ventricular signal amplitude    8 mV   ventricular sensitivity number must be <= this to sense
+
+Lead noise (the substrate for OVERSENSING). A patient may have electrical
+noise on a lead - skeletal muscle activity, a poor lead contact, external
+interference - specified as a channel, an amplitude in mV, and a rate:
+
+  It is a real signal on the wire but NOT a depolarisation: it moves no
+  myocardium and produces no pulse. If the sensitivity number is set at or
+  below the NOISE amplitude, the device mistakes it for intrinsic activity
+  and inhibits its output - a pause with no spike in it.
+
+  Because the noise amplitude is smaller than the real R wave, there is a
+  window - above the noise, below the R wave - in which the box ignores the
+  artefact but still sees genuine beats. Finding that window is the fix.
+  The artefact is drawn on the ECG whether or not the device reacts to it:
+  raising the mV does not stop the noise, it stops the box believing it.
+
+Connection fault (the substrate for OUTPUT FAILURE). A channel may have a
+broken circuit between the generator and the myocardium - a loose
+connector, a fractured cable, a lead out of its port:
+
+  The generator goes on running its timing cycles and its PACE indicator
+  goes on flashing, because from its side it is delivering pulses. But
+  nothing reaches the patient and nothing comes back, so there is NO SPIKE
+  on the ECG, no capture, and no sensing on that channel.
+
+  This is what separates output failure (spikes ABSENT) from failure to
+  capture (spikes PRESENT but ineffective) - the single most important
+  discrimination in pacing troubleshooting. Note that neither turning the
+  output up nor switching to an asynchronous mode can push current through
+  a broken circuit. Only re-seating the connection restores output.
+
+Threshold jitter (the substrate for a DISPLACED LEAD). A lead resting
+stably against myocardium has a stable capture threshold. A lead that is
+floating does not: its distance from the endocardium varies beat to beat,
+and so does the current needed to capture. Jitter is that variation, in mA.
+
+  This is why a displaced lead shows INTERMITTENT capture rather than no
+  capture - the threshold wanders across the output setting from beat to
+  beat. It is also why the same mechanism, at a smaller amplitude, is what
+  makes a rising threshold announce itself as intermittent capture before
+  it becomes total loss of capture.
+
+Ectopy (also the displaced lead). A lead swinging inside the ventricle
+irritates the endocardium mechanically, throwing ventricular ectopics and
+short runs of VT. The cause is MECHANICAL, which is the teaching point:
+no setting on the front panel can hold a lead still.
+
+Cross-talk gain (the substrate for CROSS-TALK). mV of far-field signal
+seen by the VENTRICULAR sense amplifier per mA of ATRIAL output:
+
+  The atrial stimulus throws an electrical shadow that the ventricular
+  channel can see. The ventricular blanking after an atrial pace is only
+  20 ms, and the artefact arrives at 30 ms - just outside it. If the
+  ventricular channel is sensitive enough, the box reads that artefact as
+  an R wave and WITHHOLDS the ventricular output. In a patient with no
+  escape rhythm, that is ventricular standstill.
+
+  Because the artefact scales with the atrial output, there are two cures:
+  make the ventricular channel less sensitive (raise its mV above the
+  artefact), or make the atrial stimulus smaller (turn the atrial output
+  down, keeping a capture margin). Both are modelled.
+
+Retrograde VA conduction (the substrate for PMT). The time in ms for a
+ventricular impulse to conduct BACKWARDS up the AV node to the atrium:
+
+  Antegrade block does not imply retrograde block - a patient in complete
+  heart block may conduct perfectly well backwards, and that is exactly the
+  patient who has a dual-chamber box. The retrograde P wave is inverted,
+  and the device's atrial channel cannot tell it from a native P.
+
+  If it arrives OUTSIDE the PVARP, the box tracks it, paces the ventricle,
+  and that paced beat conducts backwards again: the device has become a
+  re-entry circuit. This is pacemaker-mediated tachycardia, and its rate
+  sits exactly on the programmed upper rate limit. Extending the PVARP
+  beyond the VA conduction time is the definitive cure.
+
+Transcutaneous backup. External pacing at 60/min that ALWAYS captures. It
+is set below the transvenous rate, so while the transvenous system is
+working it never fires - and the moment that fails, it does.
+
+
+1a. DETERMINISM
+------------------------------------------------------------------------
+
+Jitter and ectopy need randomness, but a teaching scenario that behaves
+differently on every run cannot be validated, and cannot be used to assess
+two trainees fairly. The simulator therefore uses a seeded pseudo-random
+generator, re-seeded identically at the start of every scenario. The
+rhythm looks irregular; it replays exactly.
+
+
+2. DEVICE TIMING SETTINGS (fixed; shared by all modes)
+------------------------------------------------------------------------
+
+Setting                              Value     Role
+------------------------------------------------------------------------------
+Sensed-AV offset                     20 ms    the sensed AV interval runs this much
+                                               shorter than the paced one, to compensate
+                                               for sense latency. (The AV interval itself
+                                               is operator-programmable - see section 4.
+                                               Set it SHORTER than the patient's PR and
+                                               the box paces the ventricle; set it LONGER
+                                               and the patient's own conducted beat
+                                               arrives first, is sensed, and inhibits the
+                                               pace. That is how intact AV conduction is
+                                               unmasked.)
+Post-ventricular atrial refractory  300 ms    blocks tracking of retrograde / far-field P
+Atrial refractory period            250 ms    after an atrial event
+Ventricular refractory period       250 ms    prevents T-wave oversensing
+Atrial blanking                     100 ms    sensing off briefly after an atrial event
+Ventricular blanking (post-vent)    120 ms    sensing off briefly after a ventricular event
+Ventricular blanking (post-A-pace)   20 ms    crosstalk guard after an atrial pace
+AV-node refractory (conduction)     300 ms    a native P this soon after a ventricular
+                                               event will not conduct (retrograde
+                                               concealment) - no beat in the refractory
+                                               period after a paced beat
+Atrial myocardial refractory        200 ms    a pace landing this soon after a
+                                               depolarisation cannot capture (pseudofusion)
+Ventricular myocardial refractory   250 ms    as above, for the ventricle
+
+
+3. WAVEFORM AND REPOLARISATION SETTINGS
+------------------------------------------------------------------------
+
+Setting                     Value
+------------------------------------------------------------------------------
+P-wave duration             80 ms
+Narrow (conducted) QRS      100 ms
+Wide (paced) QRS            160 ms
+Escape QRS                 180 ms
+QT interval                 rate-corrected (Bazett): scaling factor
+                            k = square root of (R-R interval / 750 ms),
+                            limited to the range 0.5 - 1.7
+Native T wave               onset 220 x k ms, width 145 x k ms, upright
+                            (gives a corrected QT of about 421 ms)
+Paced T wave                onset 250 x k ms, width 170 x k ms,
+                            discordant (inverted)
+Escape T wave               onset 300 x k ms, width 200 x k ms
+
+
+4. OPERATOR-PROGRAMMABLE SETTINGS
+------------------------------------------------------------------------
+
+Control            Range              Default
+------------------------------------------------------------------------------
+Rate               30 - 180 /min      80 /min
+Upper rate limit   100 - 180 /min     160 /min
+AV interval        100 - 250 ms       200 ms
+PVARP              150 - 500 ms       300 ms
+Atrial output      0.1 - 25 mA        5.0 mA
+Ventricular output 0.1 - 25 mA        5.0 mA
+Atrial sensitivity 0.5 - 20 mV        2.0 mV
+Vent. sensitivity  0.5 - 20 mV        2.0 mV
+Mode               DDD, demoted to AAI / VVI / OFF via the lead switches
+Async switch       off / on           off
+
+The ASYNC switch converts the demand mode to its asynchronous cousin -
+DDD becomes DOO, VVI becomes VOO, AAI becomes AOO. The box stops
+listening altogether and paces blind on its timers.
+
+  This DEFEATS OVERSENSING, because a box that senses nothing cannot be
+  fooled by noise - which makes it a legitimate emergency bridge. It does
+  NOT fix a broken circuit, because no mode setting can push current down
+  a fractured cable. And it removes all protection against pacing onto a
+  T wave. It is a bridge, never a destination.
+
+The lead switches are this device's circuit. Re-seating a connection -
+unplugging a lead and plugging it back in - is what clears a badly seated
+connector, so re-connecting a lead clears a connection fault on that
+channel.
+
+The UPPER RATE LIMIT caps ventricular pacing that is TRACKING the atrium.
+It is the ceiling that makes a pacemaker-mediated tachycardia sit at
+exactly the programmed number - and turning it down, and watching the
+tachycardia obediently follow, is a free proof that the tachycardia
+belongs to the box and not to the patient.
+
+The PVARP is the window after a ventricular event during which the atrial
+channel is deaf. It therefore decides whether a retrograde P wave is seen
+and tracked, which is to say it decides whether PMT is possible at all.
+
+
+5. TEACHING MODE
+------------------------------------------------------------------------
+
+The Teaching tab hides the rhythm menu and hands the trainee a patient
+whose ground truth they must work out with the device alone.
+
+A scenario is data, not code. It states:
+
+  deviceSetup    how the box is found by the trainee
+  patientSetup   the ground truth they have to discover
+  timeline       patches applied to the patient a given number of
+                 milliseconds after the scenario starts
+  actions        clinical interventions that are not dials on the box -
+                 rolling the patient, putting the pads on, treating the
+                 potassium - each scheduling its own patches
+
+A scenario with an empty timeline is static; one with entries changes with
+time. Both run through the same engine - the physics simply re-derives from
+whatever patient it is handed on the next tick - so a threshold that rises
+during a scenario needs no special machinery. Timeline entries and action
+effects go into the same queue, which is why a treatment that takes thirty
+seconds to work and a disease that progresses on its own are the same
+mechanism. An action may also CANCEL the remaining timeline: treating the
+cause is what stops the deterioration, and nothing else does.
+
+Currently implemented: Tier 1 (scenarios 1, 1b, 2, 3, 4), Tier 2 (5, 6, 7,
+8) and Tier 3 (9, 10, 11, 12) - the whole teaching script.
+
+Tier 2 is the spiral: every fault can only be diagnosed by re-running a
+Tier 1 skill, and the trainee is told to fix the problem rather than which
+test to run. Choosing the right test is the assessment. Note that the four
+Tier 2 faults are deliberately confusable in pairs, and the discriminator
+is always on the ECG, not on the device:
+
+  spikes present, no QRS        failure to capture   (scenario 5)
+  spikes absent entirely        output failure       (scenario 8)
+  spikes where they should be
+    inhibited                   undersensing         (scenario 6)
+  spikes missing where they
+    should have been delivered   oversensing         (scenario 7)
+
+
+A NOTE ON THE VALUES
+------------------------------------------------------------------------
+
+These values are teaching-calibrated approximations, not figures
+verified against a specific device's technical manual. They are
+internally consistent and reproduce the correct qualitative behaviour,
+but several of them - particularly the exact refractory and blanking
+durations and the power-up defaults - should be confirmed against the
+manual of the specific pacemaker before being used for formal
+assessment. The refractory and blanking figures in particular are
+plausible values rather than device-verified numbers.
+    </script>
+
+    <script>
+        // ============================================================
+        //  Temporary pacemaker simulator
+        //
+        //  Modelled as an event-driven state machine per the
+        //  behavioural spec: native impulses and captured paces both
+        //  "activate" chamber tissue and reset that chamber's escape
+        //  timer, and the device's next output depends on which timer
+        //  expires first and what it is allowed to sense.
+        // ============================================================
+
+        // Properties of the pulse generator itself, and of cardiac tissue in
+        // general. The *patient's* ground truth -- capture thresholds, sensed
+        // signal amplitudes, rhythm, escape focus -- lives in the mutable
+        // `patient` object below, so a scenario can set it and change it with
+        // time.
+        const CONFIG = {
+            // The AV interval is operator-programmable (state.avInterval). The
+            // sensed AV interval runs this much shorter than the paced one, to
+            // compensate for sense latency.
+            savOffset: 20,
+
+            // How long after an atrial stimulus the ventricular channel sees the
+            // far-field signal from it. The ventricular blanking after an atrial
+            // pace is only 20 ms, so a signal arriving at 30 ms lands just OUTSIDE
+            // the blanking window -- which is precisely how cross-talk happens in
+            // a real device: the blanking is too short for the artefact.
+            crosstalkDelay: 30,
+
+            // Transcutaneous backup: an external pacer, set below the transvenous
+            // rate so it only takes over when the transvenous system fails. It
+            // always captures -- that is the point of it.
+            tcpRate: 60,
+
+            // Refractory / blanking windows (ms). PVARP is operator-programmable
+            // (state.pvarp): it is the window after a ventricular event in which
+            // the atrial channel is deaf, and therefore the setting that decides
+            // whether a retrograde P wave is seen and tracked.
+            arp: 250,     // atrial refractory after an atrial event
+            vrp: 250,     // ventricular refractory (blocks T-wave oversensing)
+            atrialBlanking: 100,           // atrial channel deaf after an atrial event
+            ventBlankPostVent: 120,        // vent channel deaf after a vent event
+            ventBlankPostAtrialPace: 20,   // crosstalk guard after atrial pace [V]
+
+            // Native AV node / ventricular tissue refractoriness (ms). A
+            // conducted or escape impulse cannot activate the ventricle if it
+            // fired more recently than this.
+            avNodeRefractory: 300,
+
+            // Myocardial effective refractory period (ms). A pacing stimulus
+            // landing this soon after a depolarisation cannot capture -> the
+            // spike is visible but ineffective (pseudofusion).
+            atrialTissueRefractory: 200,
+            ventTissueRefractory: 250
+        };
+
+        // Operator-set controls on the front of the box. Everything here is
+        // something the trainee can see and change.
+        let state = {
+            mode: 'DDD',
+            rhythm: 'sinus80',
+            atrialLead: true,
+            ventLead: true,
+            async: false,      // ASYNC switch: DDD->DOO, VVI->VOO, AAI->AOO
+            rate: 80,
+            upperRate: 160,    // ceiling on TRACKED ventricular pacing in DDD
+            pvarp: 300,        // post-ventricular atrial refractory period (ms)
+            avInterval: 200,   // paced AV delay (ms); sensed AV runs 20 ms shorter
+            aSensing: 2,
+            vSensing: 2,
+            aOutput: 5,
+            vOutput: 5
+        };
+
+        // Paced and sensed AV intervals, derived from the one AV dial.
+        function getPAV() { return state.avInterval; }
+        function getSAV() { return Math.max(30, state.avInterval - CONFIG.savOffset); }
+
+        // Upper rate interval: the shortest V-to-V the box will TRACK an atrium
+        // down to. It is the ceiling that gives a pacemaker-mediated tachycardia
+        // its most useful diagnostic feature -- the rate sits exactly on it.
+        function getURI() { return 60000 / Math.max(1, state.upperRate); }
+
+        // ------------------------------------------------------------
+        //  Patient model: the ground truth.
+        //
+        //  Nothing on the device reads these for display -- only the physics
+        //  engine consults them -- so the trainee can only infer them from the
+        //  traces and the LEDs. The sandbox rhythm menu and the teaching
+        //  scenarios are two front doors that write into this same object,
+        //  which is why a scenario needs no separate simulation path.
+        // ------------------------------------------------------------
+
+        // A patient with no abnormality of capture, sensing or circuit. Listing
+        // the faults here as nulls matters: it means both front doors (a scenario
+        // and the sandbox rhythm menu) reset them, so a scenario's fault can
+        // never leak into the next scenario or back into the sandbox.
+        const PATIENT_DEFAULTS = {
+            aThreshold: 2,        // mA the atrial output must reach to capture
+            vThreshold: 3,        // mA the ventricular output must reach to capture
+            aAmplitude: 3,        // mV of the native P wave, as the sense amp sees it
+            vAmplitude: 8,        // mV of the native R wave
+            noise: null,          // {channel, amplitude (mV), rate/min} -> oversensing substrate
+            connectionFault: null,// 'A' | 'V' | 'both' -> broken circuit, no spike reaches the patient
+
+            // ---- Tier 3 substrates ----
+            thresholdJitter: 0,   // mA of beat-to-beat variation in the capture
+                                  // threshold. A lead sitting stably against
+                                  // myocardium has none. A lead that is floating
+                                  // has a lot -- which is what makes capture
+                                  // INTERMITTENT rather than simply absent.
+            ectopyRate: 0,        // ventricular ectopics per minute. A displaced
+                                  // lead tickles the RV endocardium mechanically;
+                                  // the ectopy is caused by the lead, not by the
+                                  // pacing, which is why more output will not stop it.
+            pacedQrs: 'lbbb',     // morphology of the paced beat. RV apical pacing
+                                  // gives LBBB. A switch to RBBB means the stimulus
+                                  // is now arising from the LEFT ventricle -- the
+                                  // lead has perforated the septum.
+            crosstalkGain: 0,     // mV of far-field signal seen by the VENTRICULAR
+                                  // channel per mA of ATRIAL output. Non-zero means
+                                  // the atrial stimulus is visible to the ventricular
+                                  // sense amplifier -- the substrate for cross-talk.
+            retrogradeVA: null,   // ms for a ventricular impulse to conduct BACKWARDS
+                                  // to the atrium. The substrate for pacemaker-
+                                  // mediated tachycardia. null = no VA conduction.
+            transcutaneous: false // external backup pacing running (always captures)
+        };
+
+        // ---- Determinism ----
+        // Jitter and ectopy need randomness, but a teaching scenario that behaves
+        // differently every run cannot be validated or fairly assessed. A seeded
+        // PRNG, re-seeded identically at every scenario start, gives a rhythm that
+        // looks irregular but replays exactly.
+        let rngState = 0x2f6e2b1;
+        function seedRng(seed) { rngState = seed >>> 0; }
+        function rng() {
+            rngState = (rngState + 0x6D2B79F5) >>> 0;
+            let t = rngState;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        }
+        // A symmetric draw in [-1, 1].
+        function jitter() { return rng() * 2 - 1; }
+
+        // Rhythm presets. `escape` is {focus, rate} or null; null means there is
+        // no escape focus at all -- i.e. the patient is pacing dependent and
+        // loss of capture leaves asystole.
+        const RHYTHM_PRESETS = {
+            sinus40:        { atrialRate: 40,  avConduction: true,  prInterval: 160, conductionRatio: 1, escape: null },
+            sinus80:        { atrialRate: 80,  avConduction: true,  prInterval: 160, conductionRatio: 1, escape: null },
+            sinus120:       { atrialRate: 120, avConduction: true,  prInterval: 160, conductionRatio: 1, escape: null },
+            firstdegree:    { atrialRate: 55,  avConduction: true,  prInterval: 320, conductionRatio: 1, escape: null },
+            seconddegree21: { atrialRate: 70,  avConduction: true,  prInterval: 200, conductionRatio: 2, escape: null },
+            seconddegree31: { atrialRate: 75,  avConduction: true,  prInterval: 200, conductionRatio: 3, escape: null },
+            chb:            { atrialRate: 75,  avConduction: false, prInterval: 0,   conductionRatio: 0, escape: { focus: 'ventricular', rate: 30 } },
+            asystole:       { atrialRate: 0,   avConduction: true,  prInterval: 160, conductionRatio: 1, escape: null }
+        };
+
+        function makePatient(rhythmName) {
+            const rhythm = RHYTHM_PRESETS[rhythmName] || RHYTHM_PRESETS.sinus80;
+            return Object.assign({}, PATIENT_DEFAULTS, rhythm);
+        }
+
+        let patient = makePatient(state.rhythm);
+
+        // Sandbox rhythm change: rewrite the rhythm and return the capture and
+        // sensing truth to normal, so a scenario's abnormality cannot leak into
+        // the sandbox.
+        function applyRhythmPreset(name) {
+            Object.assign(patient, PATIENT_DEFAULTS, RHYTHM_PRESETS[name] || RHYTHM_PRESETS.sinus80);
+        }
+
+        // ---- Simulation clock (real-time) ----
+        let simTime = 0;
+        const DT = 10;                 // ms of sim advanced per physics tick
+        let lastFrameTs = null;
+        let tickAccumulator = 0;
+
+        // ---- Display calibration ----
+        // A CSS pixel is defined as 1/96 inch, so 96/25.4 CSS px = 1 mm. Traces
+        // are drawn at the standard ECG paper speed so 5 mm = 0.2 s on screen.
+        const PX_PER_MM = 96 / 25.4;
+        const SWEEP_SPEED = 25;        // mm/s (standard ECG paper speed)
+
+        // Pacing-spike marker heights, in millimetres of the ECG grid
+        // (1 mm minor square, 5 mm major box). Deliberately small.
+        const SPIKE_ATRIAL_MM = 1.25;  // ~1/4 of a 5 mm box
+        const SPIKE_VENT_MM = 1.67;    // ~1/3 of a 5 mm box
+        const SPIKE_TCP_MM = 5.0;      // transcutaneous: a much larger stimulus
+
+        // ---- Chamber physiology state ----
+        let lastAtrialActivation = -100000; // last atrial depolarisation (any source)
+        let lastVentActivation = -100000;    // last ventricular depolarisation (any source)
+        let avConductCounter = 0;             // counts atrial beats for conduction ratio
+        let scheduledQRS = null;              // {time} of a conducted QRS in flight
+        let scheduledRetroP = null;           // {time} of a retrograde P in flight
+        let scheduledCrosstalk = null;        // {time, amplitude} of an atrial-stimulus artefact
+                                              //   travelling to the ventricular sense amp
+        let lastEctopyTime = -100000;         // last isolated ectopic
+        let nextEctopicTime = 0;              // next beat of a run in progress
+        let ectopyBurstLeft = 0;              // beats remaining in the current run
+
+        // ---- Device timing state ----
+        let escapeRef = 0;         // last ventricular event (anchors LRI / AEI)
+        let lastAtrialEvent = 0;   // last atrial event (anchors AAI lower rate)
+        let aviStart = null;       // time an AV interval began, or null
+        let aviWasPaced = false;   // true -> use PAV, false -> use SAV
+
+        // ---- Refractory / blanking timestamps ----
+        let atrialBlankUntil = 0;
+        let ventBlankUntil = 0;
+        let atrialRefractoryUntil = 0;
+        let ventRefractoryUntil = 0;
+        let pvarpUntil = 0;
+
+        // ---- Lead noise (oversensing substrate) ----
+        let lastNoiseTime = -100000;
+
+        // ---- LED flash timestamps ----
+        let lastAtrialPaceTime = -100000;
+        let lastVentPaceTime = -100000;
+        let lastAtrialSenseTime = -100000;
+        let lastVentSenseTime = -100000;
+        const LED_FLASH_DURATION = 60; // ms
+
+        // ---- Waveform buffers ----
+        let ecgBuffer = [];
+        let artBuffer = [];
+        // Enough samples to fill the widest expected panel at 25 mm/s
+        // (~1.9 device px/sample, so ~1500 samples for a 2800px canvas).
+        const BUFFER_LENGTH = 1800;
+        let ecgEvents = [];            // morphology events to render
+        let ventEventTimes = [];       // mechanical ventricular beats (for HR + ABP)
+
+        // How long a cardiac event is kept. This MUST cover the whole drawable
+        // strip, not merely long enough to draw the waveform's own shape: the
+        // green trace is baked into the sample buffer as it is generated, but
+        // pacing spikes are overlaid live from this event list on every frame.
+        // If events were pruned sooner than the buffer scrolls, the spikes would
+        // vanish partway along the strip while the complexes they produced stayed
+        // -- which reads as "the pacemaker stopped", and is a lie.
+        const EVENT_RETENTION = BUFFER_LENGTH * DT;   // = the full buffer, 18 s
+
+        // Arterial model
+        const ART_FLOOR = 45;          // mmHg the pressure decays toward with no output
+
+        function recordVentEvent(time) {
+            ventEventTimes.push(time);
+            ventEventTimes = ventEventTimes.filter(t => t > time - 12000);
+        }
+
+        function getMeasuredHR() {
+            const recent = ventEventTimes.filter(t => t > simTime - 6000);
+            if (recent.length < 2) return 0;
+            let total = 0;
+            for (let i = 1; i < recent.length; i++) {
+                total += recent[i] - recent[i - 1];
+            }
+            const avg = total / (recent.length - 1);
+            return Math.round(60000 / avg);
+        }
+
+        // The programmed mode, after the lead switches demote it.
+        function getBaseMode() {
+            if (state.mode === 'OFF') return 'OFF';
+            if (state.mode === 'DDD') {
+                if (state.atrialLead && state.ventLead) return 'DDD';
+                if (state.ventLead) return 'VVI';
+                if (state.atrialLead) return 'AAI';
+                return 'OFF';
+            }
+            if (state.mode === 'VVI') return state.ventLead ? 'VVI' : 'OFF';
+            if (state.mode === 'AAI') return state.atrialLead ? 'AAI' : 'OFF';
+            if (state.mode === 'DOO') {
+                if (state.atrialLead && state.ventLead) return 'DOO';
+                if (state.ventLead) return 'VOO';
+                return 'OFF';
+            }
+            if (state.mode === 'VOO') return state.ventLead ? 'VOO' : 'OFF';
+            if (state.mode === 'AOO') return state.atrialLead ? 'AOO' : 'OFF';
+            return 'OFF';
+        }
+
+        // The ASYNC switch converts the demand mode to its asynchronous cousin:
+        // the box stops listening altogether and paces blind on its timers. That
+        // defeats oversensing -- and removes all protection against R-on-T.
+        function getMode() {
+            const base = getBaseMode();
+            if (state.async) {
+                if (base === 'DDD') return 'DOO';
+                if (base === 'VVI') return 'VOO';
+                if (base === 'AAI') return 'AOO';
+            }
+            return base;
+        }
+
+        // A mode where the device is allowed to inhibit on sensed events.
+        function sensingEnabled(mode) {
+            return mode === 'DDD' || mode === 'VVI' || mode === 'AAI';
+        }
+
+        // ---- The circuit ----
+        // `patient.connectionFault` models a broken circuit between the box and
+        // the myocardium: a loose connector, a fractured cable, a lead that has
+        // pulled out of its port. The generator still runs its timing cycles and
+        // still thinks it is pacing, but nothing reaches the patient and nothing
+        // comes back. Hence: NO spike on the ECG, no capture, and no sensing --
+        // which is what distinguishes output failure (spikes absent) from
+        // failure to capture (spikes present but ineffective).
+        function atrialCircuitIntact() {
+            return patient.connectionFault !== 'A' && patient.connectionFault !== 'both';
+        }
+
+        function ventCircuitIntact() {
+            return patient.connectionFault !== 'V' && patient.connectionFault !== 'both';
+        }
+
+        // Capture and sensing are decided against the patient's ground truth,
+        // never against a displayed number.
+        function canSenseAtrial() {
+            return state.atrialLead && atrialCircuitIntact() && state.aSensing <= patient.aAmplitude;
+        }
+
+        function canSenseVent() {
+            return state.ventLead && ventCircuitIntact() && state.vSensing <= patient.vAmplitude;
+        }
+
+        // Each of these is called exactly once per pacing stimulus, so the jitter
+        // draw is a genuine beat-to-beat draw: a floating lead may capture this
+        // beat and miss the next at an unchanged output setting.
+        function canCaptureAtrial() {
+            const threshold = patient.aThreshold + patient.thresholdJitter * jitter();
+            return state.atrialLead && atrialCircuitIntact() && state.aOutput >= threshold;
+        }
+
+        function canCaptureVent() {
+            const threshold = patient.vThreshold + patient.thresholdJitter * jitter();
+            return state.ventLead && ventCircuitIntact() && state.vOutput >= threshold;
+        }
+
+        function getLRI() {
+            return 60000 / Math.max(1, state.rate);
+        }
+
+        function addEcgEvent(type, time, extra) {
+            ecgEvents.push(Object.assign({ type, time }, extra || {}));
+            ecgEvents = ecgEvents.filter(e => e.time > simTime - EVENT_RETENTION);
+        }
+
+        // ------------------------------------------------------------
+        //  Chamber activation. Any source (native impulse or captured
+        //  pace) that depolarises tissue resets that chamber's escape
+        //  timer and, for the atrium, attempts AV conduction.
+        // ------------------------------------------------------------
+
+        function activateAtrium(now, source, rhythm) {
+            const mode = getMode();
+
+            // Retrograde activation: the impulse arrives from BELOW, having
+            // conducted backwards up the AV node from a ventricular beat. It
+            // depolarises the atrium (so the P wave is inverted), it does NOT
+            // conduct back down again (the node has just carried it upward), and
+            // -- this is the whole of pacemaker-mediated tachycardia -- the
+            // device's atrial channel cannot tell it apart from a real, native P
+            // wave. If it is seen outside PVARP, the box tracks it, paces the
+            // ventricle, and that paced beat conducts retrogradely once more.
+            if (source === 'retrograde') {
+                if ((now - lastAtrialActivation) < CONFIG.atrialTissueRefractory) return;
+                addEcgEvent('retrograde_p', now);
+                lastAtrialActivation = now;
+                if (sensingEnabled(mode) && (mode === 'DDD' || mode === 'AAI') &&
+                    canSenseAtrial() &&
+                    now >= atrialBlankUntil && now >= atrialRefractoryUntil && now >= pvarpUntil) {
+                    onAtrialSense(now, mode);   // the box is fooled: it tracks it
+                }
+                return;
+            }
+
+            let depolarised = false;
+            if (source === 'native') {
+                addEcgEvent('native_p', now);
+                depolarised = true;
+            } else if (source === 'pace' && atrialCircuitIntact()) {
+                // The stimulus only reaches the patient if the circuit is intact.
+                // With a broken circuit there is no spike at all -- output failure.
+                addEcgEvent('atrial_spike', now);
+                // A spike landing in the tissue refractory period is ineffective
+                // (pseudofusion): it shows but does not capture.
+                const refractory = (now - lastAtrialActivation) < CONFIG.atrialTissueRefractory;
+                if (canCaptureAtrial() && !refractory) {
+                    addEcgEvent('atrial_capture', now);
+                    depolarised = true;
+                }
+            }
+
+            // Only an actual depolarisation resets the native atrial focus and
+            // conducts. An uncaptured spike is electrically silent.
+            if (depolarised) {
+                lastAtrialActivation = now;
+                // AV conduction: a depolarised atrium conducts to the ventricle
+                // after the native PR interval, subject to the conduction ratio.
+                if (rhythm.avConduction && rhythm.conductionRatio > 0) {
+                    avConductCounter += 1;
+                    const conductsThisBeat = (avConductCounter % rhythm.conductionRatio) === 0;
+                    // The AV node is refractory after a ventricular event (antegrade
+                    // refractoriness plus retrograde concealment from a paced or
+                    // sensed beat), so a P arriving too soon is blocked and produces
+                    // no QRS -- preventing a conducted beat inside the refractory
+                    // period after a paced beat.
+                    const avRecovered = (now - lastVentActivation) >= CONFIG.avNodeRefractory;
+                    if (conductsThisBeat && avRecovered) {
+                        scheduledQRS = { time: now + rhythm.prInterval };
+                    }
+                }
+            }
+
+            // Device atrial sensing (native events only; a pace is self-generated).
+            if (source === 'native' && sensingEnabled(mode) &&
+                (mode === 'DDD' || mode === 'AAI') &&
+                canSenseAtrial() &&
+                now >= atrialBlankUntil && now >= atrialRefractoryUntil && now >= pvarpUntil) {
+                onAtrialSense(now, mode);
+            }
+        }
+
+        // `focus` applies only to escape beats: 'junctional' (supraventricular
+        // origin -> narrow QRS) or 'ventricular' (idioventricular -> wide, slow).
+        function activateVentricle(now, source, focus) {
+            const mode = getMode();
+
+            // Rate-correct the QT interval: T-wave timing scales with the square
+            // root of the preceding R-R (Bazett), so QT shortens as rate rises
+            // and the T wave clears the next complex instead of causing R-on-T.
+            const prevVent = ventEventTimes.length ? ventEventTimes[ventEventTimes.length - 1] : null;
+            const rr = (prevVent !== null && now - prevVent < 3000) ? (now - prevVent) : getLRI();
+            const qtK = Math.max(0.5, Math.min(1.7, Math.sqrt(rr / 750)));
+
+            let mechanical = false;
+            if (source === 'native') {          // conducted narrow QRS
+                addEcgEvent('native_qrs', now, { tStart: 220 * qtK, tWidth: 145 * qtK });
+                mechanical = true;
+            } else if (source === 'escape') {
+                if (focus === 'junctional') {
+                    // Junctional escape: the impulse enters the His-Purkinje
+                    // system normally, so the QRS is narrow -- identical in form
+                    // to a conducted beat, but with no preceding P wave.
+                    addEcgEvent('native_qrs', now, { tStart: 220 * qtK, tWidth: 145 * qtK });
+                } else {
+                    addEcgEvent('native_qrs_escape', now, { tStart: 300 * qtK, tWidth: 200 * qtK });
+                }
+                mechanical = true;
+            } else if (source === 'ectopic') {
+                // A ventricular ectopic. Here it is MECHANICAL irritation from a
+                // lead lying against the endocardium, not an electrical problem --
+                // which is why no amount of adjusting the box will stop it.
+                addEcgEvent('ectopic_qrs', now, { tStart: 280 * qtK, tWidth: 190 * qtK });
+                mechanical = true;
+            } else if (source === 'transcutaneous') {
+                // External backup pacing. It always captures -- that is the point.
+                addEcgEvent('tcp_spike', now);
+                addEcgEvent('vent_capture', now, { tStart: 250 * qtK, tWidth: 170 * qtK, morph: 'lbbb' });
+                mechanical = true;
+            } else if (source === 'pace' && ventCircuitIntact()) {
+                // The stimulus only reaches the patient if the circuit is intact.
+                // With a broken circuit there is no spike at all -- output failure.
+                addEcgEvent('vent_spike', now);
+                // A spike landing in the tissue refractory period is ineffective
+                // (pseudofusion): it shows but does not capture.
+                const refractory = (now - lastVentActivation) < CONFIG.ventTissueRefractory;
+                if (canCaptureVent() && !refractory) {
+                    addEcgEvent('vent_capture', now, {
+                        tStart: 250 * qtK, tWidth: 170 * qtK, morph: patient.pacedQrs
+                    });
+                    mechanical = true;
+                }
+            }
+
+            // Only an actual depolarisation resets the ventricular escape focus
+            // and counts as a mechanical beat. An uncaptured spike does neither.
+            if (mechanical) {
+                lastVentActivation = now;
+                recordVentEvent(now);
+
+                // Retrograde (ventriculo-atrial) conduction. Any real ventricular
+                // depolarisation -- paced or not -- may conduct backwards up the
+                // AV node to the atrium. Antegrade block does not imply retrograde
+                // block: a patient in complete heart block can still have intact
+                // VA conduction, which is exactly the setup for PMT.
+                if (patient.retrogradeVA) {
+                    scheduledRetroP = { time: now + patient.retrogradeVA };
+                }
+            }
+
+            // Device ventricular sensing (intrinsic events only).
+            if (source !== 'pace' && source !== 'transcutaneous' && sensingEnabled(mode) &&
+                (mode === 'DDD' || mode === 'VVI') &&
+                canSenseVent() &&
+                now >= ventBlankUntil && now >= ventRefractoryUntil) {
+                onVentSense(now);
+            }
+        }
+
+        // ------------------------------------------------------------
+        //  Sensed-event handlers (demand behaviour).
+        // ------------------------------------------------------------
+
+        function onAtrialSense(now, mode) {
+            lastAtrialSenseTime = now;
+            lastAtrialEvent = now;
+            atrialRefractoryUntil = now + CONFIG.arp;
+            atrialBlankUntil = now + CONFIG.atrialBlanking;
+            if (mode === 'DDD') {
+                // Track the atrium: start SAV. Inhibits the scheduled atrial pace.
+                aviStart = now;
+                aviWasPaced = false;
+            }
+        }
+
+        function onVentSense(now) {
+            lastVentSenseTime = now;
+            escapeRef = now;                       // reset lower rate interval
+            ventRefractoryUntil = now + CONFIG.vrp;
+            ventBlankUntil = now + CONFIG.ventBlankPostVent;
+            pvarpUntil = now + state.pvarp;
+            aviStart = null;                       // AV sequence resolved intrinsically
+        }
+
+        // ------------------------------------------------------------
+        //  Noise on the lead (the substrate for oversensing).
+        //
+        //  patient.noise = { channel: 'V' | 'A', amplitude (mV), rate (per min) }
+        //
+        //  The artefact is drawn on the ECG whether or not the device reacts to
+        //  it -- the patient is still shivering, the diathermy is still running.
+        //  What changes with the sensitivity setting is whether the DEVICE is
+        //  fooled by it. Crucially the device is fooled when the sensitivity
+        //  number is <= the NOISE amplitude, which is a smaller signal than the
+        //  real R wave. So there is a window -- above the noise, below the R wave
+        //  -- in which the box ignores the artefact but still sees real beats.
+        //  Finding that window is the whole exercise.
+        // ------------------------------------------------------------
+
+        // Ventricular ectopy from a lead lying against and irritating the RV
+        // endocardium. Mostly isolated beats, sometimes a short run -- the runs are
+        // what turn an annoyance into a threat. The ectopic cannot fire into a
+        // ventricle that is still refractory.
+        function tickEctopy(now) {
+            if (!patient.ectopyRate) return;
+            if (now - lastVentActivation < CONFIG.ventTissueRefractory) return;
+
+            if (ectopyBurstLeft > 0) {
+                if (now >= nextEctopicTime) {
+                    activateVentricle(now, 'ectopic');
+                    ectopyBurstLeft -= 1;
+                    nextEctopicTime = now + 60000 / 190;   // run rate ~190/min
+                }
+                return;
+            }
+
+            if (now - lastEctopyTime >= 60000 / patient.ectopyRate) {
+                lastEctopyTime = now;
+                activateVentricle(now, 'ectopic');
+                // One in four is the start of a short run of non-sustained VT.
+                if (rng() < 0.25) {
+                    ectopyBurstLeft = 2 + Math.floor(rng() * 4);   // 2-5 more beats
+                    nextEctopicTime = now + 60000 / 190;
+                }
+            }
+        }
+
+        function tickNoise(now, mode) {
+            const noise = patient.noise;
+            if (!noise || !noise.rate) return;
+
+            const interval = 60000 / noise.rate;
+            if (now - lastNoiseTime < interval) return;
+            lastNoiseTime = now;
+
+            addEcgEvent('noise', now, { channel: noise.channel });
+
+            // Does the device mistake it for a real event?
+            if (!sensingEnabled(mode)) return;      // asynchronous: deaf to everything
+
+            if (noise.channel === 'V') {
+                if ((mode === 'DDD' || mode === 'VVI') &&
+                    state.ventLead && ventCircuitIntact() &&
+                    state.vSensing <= noise.amplitude &&
+                    now >= ventBlankUntil && now >= ventRefractoryUntil) {
+                    onVentSense(now);               // inhibits the ventricular output
+                }
+            } else if (noise.channel === 'A') {
+                if ((mode === 'DDD' || mode === 'AAI') &&
+                    state.atrialLead && atrialCircuitIntact() &&
+                    state.aSensing <= noise.amplitude &&
+                    now >= atrialBlankUntil && now >= atrialRefractoryUntil && now >= pvarpUntil) {
+                    onAtrialSense(now, mode);
+                }
+            }
+        }
+
+        // ------------------------------------------------------------
+        //  Device outputs.
+        // ------------------------------------------------------------
+
+        function paceAtrium(now, rhythm) {
+            lastAtrialPaceTime = now;
+            lastAtrialEvent = now;
+            atrialBlankUntil = now + CONFIG.atrialBlanking;
+            atrialRefractoryUntil = now + CONFIG.arp;
+            // Crosstalk guard: brief ventricular blanking after an atrial pace.
+            ventBlankUntil = Math.max(ventBlankUntil, now + CONFIG.ventBlankPostAtrialPace);
+            // Start the paced AV interval.
+            aviStart = now;
+            aviWasPaced = true;
+            // The far-field signal from the atrial stimulus reaches the ventricular
+            // sense amplifier a few ms later -- just after the blanking window
+            // closes. Its size scales with the atrial OUTPUT, which is why turning
+            // the atrial output down is one of the two ways to cure cross-talk.
+            if (patient.crosstalkGain > 0 && atrialCircuitIntact()) {
+                scheduledCrosstalk = {
+                    time: now + CONFIG.crosstalkDelay,
+                    amplitude: state.aOutput * patient.crosstalkGain
+                };
+            }
+            activateAtrium(now, 'pace', rhythm);
+        }
+
+        function paceVentricle(now) {
+            lastVentPaceTime = now;
+            escapeRef = now;                       // reset lower rate interval
+            ventRefractoryUntil = now + CONFIG.vrp;
+            ventBlankUntil = now + CONFIG.ventBlankPostVent;
+            pvarpUntil = now + state.pvarp;
+            aviStart = null;
+            // A conducted QRS already in flight is NOT cancelled here. If the
+            // pace captures, that beat is blocked anyway by the AV-node /
+            // ventricular refractory check when it comes due. If the pace fails
+            // to capture, the ventricle is not refractory and the conducted beat
+            // must still arrive -- which is exactly what loss of capture looks
+            // like in a patient with intact AV conduction.
+            activateVentricle(now, 'pace');
+        }
+
+        // ------------------------------------------------------------
+        //  Physics tick.
+        // ------------------------------------------------------------
+
+        function simulateTick() {
+            simTime += DT;
+            const now = simTime;
+
+            // A running scenario may mutate the patient at this instant.
+            tickScenario(now);
+
+            const rhythm = patient;
+            const mode = getMode();
+
+            // 1. Conducted QRS in flight arrives (if ventricle is not refractory).
+            if (scheduledQRS !== null && now >= scheduledQRS.time) {
+                if (now - lastVentActivation >= CONFIG.avNodeRefractory) {
+                    activateVentricle(now, 'native');
+                }
+                scheduledQRS = null;
+            }
+
+            // 1a. Retrograde P in flight arrives: a ventricular beat conducting
+            //     backwards to the atrium. The engine of PMT.
+            if (scheduledRetroP !== null && now >= scheduledRetroP.time) {
+                activateAtrium(now, 'retrograde', rhythm);
+                scheduledRetroP = null;
+            }
+
+            // 1b. Cross-talk: the far-field signal from an atrial stimulus reaching
+            //     the VENTRICULAR sense amplifier. It is not a depolarisation and
+            //     moves no myocardium -- but if the ventricular channel is sensitive
+            //     enough to see it, the box reads it as an intrinsic R wave and
+            //     withholds the ventricular output. In a dependent patient with no
+            //     escape, that is ventricular standstill.
+            if (scheduledCrosstalk !== null && now >= scheduledCrosstalk.time) {
+                const signal = scheduledCrosstalk.amplitude;
+                scheduledCrosstalk = null;
+                if (sensingEnabled(mode) && (mode === 'DDD' || mode === 'VVI') &&
+                    state.ventLead && ventCircuitIntact() &&
+                    state.vSensing <= signal &&
+                    now >= ventBlankUntil && now >= ventRefractoryUntil) {
+                    addEcgEvent('crosstalk', now);
+                    onVentSense(now);      // the ventricular output is inhibited
+                }
+            }
+
+            // 2. Native atrial focus (overdrive-suppressible by any atrial activation).
+            if (rhythm.atrialRate > 0) {
+                const atrialInterval = 60000 / rhythm.atrialRate;
+                if (now - lastAtrialActivation >= atrialInterval) {
+                    activateAtrium(now, 'native', rhythm);
+                }
+            }
+
+            // 3. Escape focus, if the patient has one. Junctional and
+            //    idioventricular foci behave identically in timing -- they fire
+            //    only if nothing else has activated the ventricle first -- and
+            //    differ only in QRS morphology. A patient with escape === null
+            //    is pacing dependent: lose capture and there is nothing behind it.
+            if (rhythm.escape && rhythm.escape.rate > 0) {
+                const escapeInterval = 60000 / rhythm.escape.rate;
+                if (now - lastVentActivation >= escapeInterval) {
+                    activateVentricle(now, 'escape', rhythm.escape.focus);
+                }
+            }
+
+            // 3a. Ventricular ectopy from a lead irritating the endocardium,
+            //     sometimes in short runs. Mechanical in origin, so it answers to
+            //     lead position and to nothing on the front panel.
+            tickEctopy(now);
+
+            // 3b. Transcutaneous backup, if the trainee has put the pads on. It is
+            //     set below the transvenous rate, so while the transvenous system
+            //     is capturing it never fires -- and the moment that fails, it does.
+            if (patient.transcutaneous) {
+                if (now - lastVentActivation >= 60000 / CONFIG.tcpRate) {
+                    activateVentricle(now, 'transcutaneous');
+                }
+            }
+
+            // 4. Non-cardiac electrical noise on a lead (skeletal muscle, EMI,
+            //    a lead contact problem). The artefact is a real signal on the
+            //    wire but NOT a depolarisation: it moves no myocardium and makes
+            //    no pulse. If the channel is set sensitive enough to see it, the
+            //    device mistakes it for intrinsic activity and inhibits -- which
+            //    is oversensing, and which is why the fix is to raise the mV,
+            //    not to touch the output.
+            tickNoise(now, mode);
+
+            if (mode === 'OFF') return;
+
+            // 5. Device pacing decisions.
+            const LRI = getLRI();
+
+            if (mode === 'AAI' || mode === 'AOO') {
+                if (now - lastAtrialEvent >= LRI) paceAtrium(now, rhythm);
+                return;
+            }
+
+            if (mode === 'VVI' || mode === 'VOO') {
+                if (now - escapeRef >= LRI) paceVentricle(now);
+                return;
+            }
+
+            // Dual-chamber engine (DDD and its asynchronous cousin DOO).
+            // If the AV interval is set longer than the patient's own PR, the
+            // conducted beat arrives first, is sensed, and inhibits the
+            // ventricular pace -- which is how intact AV conduction is unmasked.
+            const AVI = aviWasPaced ? getPAV() : getSAV();
+
+            // 4a. AV interval expires with no intrinsic ventricular event -> pace V,
+            //     but never sooner than the upper rate interval after the last
+            //     ventricular event. This ceiling is what makes a pacemaker-mediated
+            //     tachycardia sit at EXACTLY the programmed upper rate -- the single
+            //     most useful clue that a tachycardia is the box's fault, not the
+            //     patient's.
+            if (aviStart !== null && now - aviStart >= AVI && now - escapeRef >= getURI()) {
+                paceVentricle(now);
+                return;
+            }
+
+            // 4b. Atrial lower-rate escape: pace A one LRI after the last atrial
+            //     event (atrial-based timing keeps the paced rate exact).
+            if (aviStart === null && now - lastAtrialEvent >= LRI) {
+                paceAtrium(now, rhythm);
+                return;
+            }
+
+            // 4c. Ventricular safety escape: guards against ventricular asystole
+            //     if no atrial event has started an AV interval. Rarely fires.
+            if (aviStart === null && now - escapeRef >= LRI + AVI) {
+                paceVentricle(now);
+                return;
+            }
+        }
+
+        // ------------------------------------------------------------
+        //  Waveform morphology.
+        // ------------------------------------------------------------
+
+        function getPWaveShape(offset) {
+            if (offset < 0 || offset > 80) return 0;
+            const x = offset / 80;
+            return 14 * Math.sin(x * Math.PI);
+        }
+
+        function getNarrowQRSShape(offset) {
+            if (offset < 0 || offset > 100) return 0;
+            if (offset < 20) return -6 * (offset / 20);
+            if (offset < 50) return -6 + 84 * ((offset - 20) / 30);
+            if (offset < 70) return 78 - 88 * ((offset - 50) / 20);
+            return -10 + 10 * ((offset - 70) / 30);
+        }
+
+        function getWideQRSShape(offset) {
+            if (offset < 0 || offset > 160) return 0;
+            if (offset < 40) return -70 * (offset / 40);
+            if (offset < 80) return -70 + 120 * ((offset - 40) / 40);
+            if (offset < 120) return 50 - 70 * ((offset - 80) / 40);
+            return -20 + 20 * ((offset - 120) / 40);
+        }
+
+        // The paced beat when the stimulus arises from the LEFT ventricle: the
+        // septum has been perforated. Grossly different from the normal RV-apical
+        // (LBBB) paced beat -- dominantly upright rather than dominantly negative.
+        // Recognising this shift is the whole point of drawing it.
+        function getWideQRSShapeRBBB(offset) {
+            if (offset < 0 || offset > 160) return 0;
+            if (offset < 30) return 90 * (offset / 30);                       // tall, fast R
+            if (offset < 70) return 90 - 150 * ((offset - 30) / 40);          // deep S
+            if (offset < 110) return -60 + 80 * ((offset - 70) / 40);         // second R'
+            return 20 - 20 * ((offset - 110) / 50);
+        }
+
+        // A ventricular ectopic: broad, bizarre, and premature.
+        function getEctopicQRSShape(offset) {
+            if (offset < 0 || offset > 170) return 0;
+            if (offset < 45) return -85 * (offset / 45);
+            if (offset < 95) return -85 + 155 * ((offset - 45) / 50);
+            if (offset < 135) return 70 - 95 * ((offset - 95) / 40);
+            return -25 + 25 * ((offset - 135) / 35);
+        }
+
+        function getEscapeQRSShape(offset) {
+            if (offset < 0 || offset > 180) return 0;
+            if (offset < 50) return -28 * (offset / 50);
+            if (offset < 100) return -28 + 60 * ((offset - 50) / 50);
+            if (offset < 140) return 32 - 42 * ((offset - 100) / 40);
+            return -10 + 10 * ((offset - 140) / 40);
+        }
+
+        // Lead artefact: a short jagged burst on the baseline, of the kind
+        // skeletal muscle or a loose lead contact produces. Small compared with a
+        // QRS (which peaks around 80) but not nothing -- deliberately visible, so
+        // the trainee can see WHY the box is being fooled. It is drawn from a
+        // deterministic function of the offset, not a random number, so the trace
+        // is reproducible from run to run.
+        function getNoiseShape(offset) {
+            if (offset < 0 || offset > 90) return 0;
+            const envelope = Math.sin((offset / 90) * Math.PI);   // fade in and out
+            return 5 * envelope * Math.sin(offset * 1.9);         // fast jitter
+        }
+
+        // Rounded T wave (ventricular repolarisation) starting `start` ms after
+        // the QRS. `amp` sign sets polarity: paced/wide beats repolarise
+        // discordantly (opposite the dominant QRS deflection).
+        function getTWaveShape(offset, start, width, amp) {
+            if (offset < start || offset > start + width) return 0;
+            return amp * Math.sin(((offset - start) / width) * Math.PI);
+        }
+
+        // Arterial pressure contribution from a mechanical beat, dt ms ago.
+        // The upstroke rises straight from the diastolic floor (no pre-systolic
+        // wave); the pre-ejection segment stays at diastole so the runoff of the
+        // previous beat shows through.
+        function arterialWave(dt) {
+            const SYS = 120, NOTCH = 90, DICROTIC = 6;
+            if (dt < 40) return ART_FLOOR;                                              // pre-ejection
+            if (dt < 150) return ART_FLOOR + (SYS - ART_FLOOR) * Math.sin(((dt - 40) / 110) * (Math.PI / 2)); // anacrotic upstroke
+            if (dt < 250) return SYS - (SYS - NOTCH) * ((dt - 150) / 100);              // systolic decline
+            if (dt < 310) return NOTCH + DICROTIC * Math.sin(((dt - 250) / 60) * Math.PI); // dicrotic wave
+            const decay = Math.exp(-(dt - 310) / 650);                                  // diastolic runoff
+            return ART_FLOOR + (NOTCH - ART_FLOOR) * decay;
+        }
+
+        function generateWaveforms() {
+            let ecgSample = 0;
+            for (const event of ecgEvents) {
+                const offset = simTime - event.time;
+                switch (event.type) {
+                    case 'noise':           ecgSample += getNoiseShape(offset); break;
+                    case 'native_p':        ecgSample += getPWaveShape(offset); break;
+                    case 'native_qrs':
+                        ecgSample += getNarrowQRSShape(offset);
+                        ecgSample += getTWaveShape(offset, event.tStart, event.tWidth, 22);   // concordant upright T
+                        break;
+                    case 'native_qrs_escape':
+                        ecgSample += getEscapeQRSShape(offset);
+                        ecgSample += getTWaveShape(offset, event.tStart, event.tWidth, 26);   // broad T for the wide escape
+                        break;
+                    // Pacing spikes (atrial_spike / vent_spike) are drawn as
+                    // white overlay marks in drawPacingSpikes(), not baked into
+                    // the green trace, so they stay visible even without capture.
+                    case 'atrial_capture':  ecgSample += getPWaveShape(offset - 25); break;
+                    case 'retrograde_p':
+                        // Conducted from below, so the P wave is INVERTED.
+                        ecgSample -= getPWaveShape(offset);
+                        break;
+                    case 'ectopic_qrs':
+                        ecgSample += getEctopicQRSShape(offset);
+                        ecgSample += getTWaveShape(offset, event.tStart, event.tWidth, -30);
+                        break;
+                    case 'vent_capture':
+                        // RBBB morphology = the stimulus is now coming from the LEFT
+                        // ventricle: the lead has crossed the septum.
+                        ecgSample += (event.morph === 'rbbb')
+                            ? getWideQRSShapeRBBB(offset - 25)
+                            : getWideQRSShape(offset - 25);
+                        // Repolarisation is discordant: opposite the dominant deflection,
+                        // so it flips with the morphology.
+                        ecgSample += getTWaveShape(offset - 25, event.tStart, event.tWidth,
+                            (event.morph === 'rbbb') ? 34 : -34);
+                        break;
+                }
+            }
+
+            // Arterial line: superimpose the runoff of every recent mechanical beat.
+            let artSample = ART_FLOOR;
+            for (const t of ventEventTimes) {
+                const dt = simTime - t;
+                if (dt >= 0 && dt < 2000) {
+                    artSample = Math.max(artSample, arterialWave(dt));
+                }
+            }
+
+            ecgBuffer.push(ecgSample);
+            artBuffer.push(artSample);
+            if (ecgBuffer.length > BUFFER_LENGTH) ecgBuffer.shift();
+            if (artBuffer.length > BUFFER_LENGTH) artBuffer.shift();
+        }
+
+        // ------------------------------------------------------------
+        //  Rendering.
+        // ------------------------------------------------------------
+
+        const ecgCanvas = document.getElementById('ecgCanvas');
+        const artCanvas = document.getElementById('artCanvas');
+        const ecgCtx = ecgCanvas.getContext('2d');
+        const artCtx = artCanvas.getContext('2d');
+
+        function resizeCanvases() {
+            ecgCanvas.width = ecgCanvas.offsetWidth * 2;
+            artCanvas.width = artCanvas.offsetWidth * 2;
+            ecgCanvas.height = 300;
+            artCanvas.height = 200;
+        }
+
+        function renderTrace(ctx, buffer, color, minVal, maxVal) {
+            const W = ctx.canvas.width;
+            const H = ctx.canvas.height;
+
+            // Device pixels per mm (canvas is drawn at a multiple of its CSS size).
+            const cssToDevice = W / (ctx.canvas.offsetWidth || W);
+            const pxPerMm = PX_PER_MM * cssToDevice;
+            const pxPerSample = SWEEP_SPEED * pxPerMm * (DT / 1000);
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, W, H);
+
+            // ECG graph paper: 1 mm minor boxes, 5 mm major boxes (= 0.2 s at 25 mm/s).
+            const minor = pxPerMm;
+            const major = pxPerMm * 5;
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#101a10';
+            for (let x = 0; x <= W; x += minor) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+            }
+            for (let y = 0; y <= H; y += minor) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+            }
+            ctx.strokeStyle = '#204020';
+            for (let x = 0; x <= W; x += major) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+            }
+            for (let y = 0; y <= H; y += major) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+            }
+
+            // Draw the most recent samples that fit the width, spaced at the
+            // calibrated sweep speed (newest on the right).
+            const visible = Math.min(buffer.length, Math.floor(W / pxPerSample) + 2);
+            const start = buffer.length - visible;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let k = 0; k < visible; k++) {
+                const x = k * pxPerSample;
+                const normalized = (buffer[start + k] - minVal) / (maxVal - minVal);
+                const y = H - (normalized * H * 0.8) - H * 0.1;
+                if (k === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+        }
+
+        function render() {
+            renderTrace(ecgCtx, ecgBuffer, '#00ff00', -80, 200);
+            drawPacingSpikes(ecgCtx, ecgBuffer);
+            renderTrace(artCtx, artBuffer, '#ff4444', 20, 140);
+        }
+
+        // Pacing stimuli are drawn as distinct bright vertical marks, the way a
+        // bedside monitor annotates pacer spikes. A spike is then obvious even
+        // when it does not capture -- e.g. competitive pacing in undersensing,
+        // or spikes marching with no complex in loss of capture.
+        function drawPacingSpikes(ctx, buffer) {
+            const W = ctx.canvas.width, H = ctx.canvas.height;
+            const cssToDevice = W / (ctx.canvas.offsetWidth || W);
+            const pxPerMm = PX_PER_MM * cssToDevice;
+            const pxPerSample = SWEEP_SPEED * pxPerMm * (DT / 1000);
+            const visible = Math.min(buffer.length, Math.floor(W / pxPerSample) + 2);
+            const start = buffer.length - visible;
+            const lastIndex = buffer.length - 1;
+            const baselineY = H * 0.67;
+
+            ctx.lineWidth = 2;
+            for (const e of ecgEvents) {
+                if (e.type !== 'atrial_spike' && e.type !== 'vent_spike' && e.type !== 'tcp_spike') continue;
+                const n = Math.round((simTime - e.time) / DT);
+                const k = (lastIndex - n) - start;
+                if (k < 0 || k >= visible) continue;
+                const x = k * pxPerSample;
+                let mm = SPIKE_ATRIAL_MM;
+                if (e.type === 'vent_spike') mm = SPIKE_VENT_MM;
+                // The transcutaneous spike is drawn big and in a different colour:
+                // it is a much larger stimulus, and the trainee needs to see at a
+                // glance which box is carrying the patient.
+                if (e.type === 'tcp_spike') mm = SPIKE_TCP_MM;
+                ctx.strokeStyle = (e.type === 'tcp_spike') ? '#ffaa00' : '#ffffff';
+                ctx.lineWidth = (e.type === 'tcp_spike') ? 3 : 2;
+                const heightPx = mm * pxPerMm;
+                ctx.beginPath();
+                ctx.moveTo(x, baselineY);
+                ctx.lineTo(x, baselineY - heightPx);
+                ctx.stroke();
+            }
+        }
+
+        // ------------------------------------------------------------
+        //  Display / status.
+        // ------------------------------------------------------------
+
+        function updateDisplay() {
+            const mode = getMode();
+            const now = simTime;
+            document.getElementById('modeBadge').textContent = mode;
+            document.getElementById('rateValue').textContent = state.rate;
+            document.getElementById('upperRateValue').textContent = state.upperRate;
+            document.getElementById('avIntervalValue').textContent = state.avInterval;
+            document.getElementById('pvarpValue').textContent = state.pvarp;
+            document.getElementById('aSensingValue').textContent = state.aSensing.toFixed(1);
+            document.getElementById('aOutputValue').textContent = state.aOutput.toFixed(1);
+            document.getElementById('vSensingValue').textContent = state.vSensing.toFixed(1);
+            document.getElementById('vOutputValue').textContent = state.vOutput.toFixed(1);
+
+            // LEDs flash briefly on the event they represent.
+            const aPaceActive = (now - lastAtrialPaceTime) < LED_FLASH_DURATION;
+            const aSenseActive = (now - lastAtrialSenseTime) < LED_FLASH_DURATION;
+            const vPaceActive = (now - lastVentPaceTime) < LED_FLASH_DURATION;
+            const vSenseActive = (now - lastVentSenseTime) < LED_FLASH_DURATION;
+            document.getElementById('ledAPace').parentElement.classList.toggle('active', aPaceActive);
+            document.getElementById('ledASense').parentElement.classList.toggle('active', aSenseActive);
+            document.getElementById('ledVPace').parentElement.classList.toggle('active', vPaceActive);
+            document.getElementById('ledVSense').parentElement.classList.toggle('active', vSenseActive);
+
+            // No diagnostic alerts: recognising failure modes (loss of capture,
+            // undersensing, lead disconnection, etc.) from the traces is the
+            // learning objective, so the device must not name them.
+
+            // Heart rate.
+            const measuredHR = getMeasuredHR();
+            document.getElementById('hrDisplay').textContent = measuredHR || '--';
+
+            // ABP: systolic = peak, diastolic = trough over the recent window; held.
+            const windowSamples = Math.min(artBuffer.length, Math.floor(4000 / DT));
+            const recentArt = artBuffer.slice(artBuffer.length - windowSamples);
+            let sys = ART_FLOOR, dia = ART_FLOOR;
+            if (recentArt.length) {
+                sys = Math.round(Math.max(...recentArt));
+                dia = Math.round(Math.min(...recentArt));
+            }
+            document.getElementById('bpDisplay').textContent = `${sys}/${dia}`;
+
+            // Paced indicator.
+            const aPacedRecent = (now - lastAtrialPaceTime) < 2000;
+            const vPacedRecent = (now - lastVentPaceTime) < 2000;
+            let paced = '--';
+            if (aPacedRecent && vPacedRecent) paced = 'A+V';
+            else if (aPacedRecent) paced = 'A';
+            else if (vPacedRecent) paced = 'V';
+            document.getElementById('pacedDisplay').textContent = paced;
+
+            // Scenario clock: elapsed time since the scenario started. Timeline
+            // patches are keyed to this, not to wall-clock time.
+            const clock = document.getElementById('scenarioClock');
+            if (activeScenario) {
+                const elapsed = Math.max(0, Math.floor((now - scenarioStart) / 1000));
+                const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const ss = String(elapsed % 60).padStart(2, '0');
+                clock.textContent = `${mm}:${ss}`;
+            } else {
+                clock.textContent = '';
+            }
+        }
+
+        // ------------------------------------------------------------
+        //  Controls.
+        // ------------------------------------------------------------
+
+        function resetTimers() {
+            // Called on rhythm change: re-seed physiology so events don't all
+            // fire at once, but leave device timers running.
+            lastAtrialActivation = simTime;
+            lastVentActivation = simTime;
+            avConductCounter = 0;
+            scheduledQRS = null;
+        }
+
+        document.getElementById('rhythmSelect').addEventListener('change', e => {
+            state.rhythm = e.target.value;
+            applyRhythmPreset(state.rhythm);
+            resetTimers();
+            updateDisplay();
+        });
+
+        // The lead switches are this device's circuit. Re-seating a connection --
+        // unplugging it and plugging it back in -- is what fixes a loose or badly
+        // seated connector, so re-connecting a lead clears any connection fault on
+        // that channel. (Nothing else does: turning the output up cannot push
+        // current through a broken circuit, and neither can an asynchronous mode.)
+        function reseatChannel(channel) {
+            if (patient.connectionFault === channel) {
+                patient.connectionFault = null;
+            } else if (patient.connectionFault === 'both') {
+                patient.connectionFault = (channel === 'A') ? 'V' : 'A';
+            }
+        }
+
+        document.getElementById('atrialLead').addEventListener('change', e => {
+            state.atrialLead = e.target.checked;
+            if (e.target.checked) reseatChannel('A');
+            updateDisplay();
+        });
+
+        document.getElementById('ventLead').addEventListener('change', e => {
+            state.ventLead = e.target.checked;
+            if (e.target.checked) reseatChannel('V');
+            updateDisplay();
+        });
+
+        document.getElementById('asyncSwitch').addEventListener('change', e => {
+            state.async = e.target.checked;
+            updateDisplay();
+        });
+
+        document.getElementById('rate').addEventListener('input', e => {
+            state.rate = parseInt(e.target.value, 10);
+            updateDisplay();
+        });
+
+        document.getElementById('avInterval').addEventListener('input', e => {
+            state.avInterval = parseInt(e.target.value, 10);
+            updateDisplay();
+        });
+
+        document.getElementById('upperRate').addEventListener('input', e => {
+            state.upperRate = parseInt(e.target.value, 10);
+            updateDisplay();
+        });
+
+        document.getElementById('pvarp').addEventListener('input', e => {
+            state.pvarp = parseInt(e.target.value, 10);
+            updateDisplay();
+        });
+
+        document.getElementById('aSensing').addEventListener('input', e => {
+            state.aSensing = parseFloat(e.target.value);
+            updateDisplay();
+        });
+
+        document.getElementById('aOutput').addEventListener('input', e => {
+            state.aOutput = parseFloat(e.target.value);
+            updateDisplay();
+        });
+
+        document.getElementById('vSensing').addEventListener('input', e => {
+            state.vSensing = parseFloat(e.target.value);
+            updateDisplay();
+        });
+
+        document.getElementById('vOutput').addEventListener('input', e => {
+            state.vOutput = parseFloat(e.target.value);
+            updateDisplay();
+        });
+
+        // ============================================================
+        //  TEACHING SCENARIOS
+        //
+        //  A scenario is data, not code. It states:
+        //    deviceSetup   - how the box is found by the trainee
+        //    patientSetup  - the ground truth they must discover
+        //    timeline      - patches applied to the patient at a given
+        //                    number of ms after the scenario starts
+        //
+        //  A scenario whose timeline is empty is static; one with entries
+        //  changes with time. Both run through the same engine, so a
+        //  time-varying scenario needs no special simulation path -- the
+        //  physics simply re-derives from the patient it is handed on the
+        //  next tick.
+        // ============================================================
+
+        const SCENARIOS = [
+            {
+                id: 'sc1',
+                tier: 1,
+                name: '1 — Establish pacing dependence',
+                objectives: [
+                    'Decide whether the patient has an adequate underlying rhythm',
+                    'Do it without causing haemodynamic compromise'
+                ],
+                vignette: 'Routine morning check. Before you test anything, I want to know: does this patient actually need the pacemaker right now?',
+                // VVI at 70 over a patient whose sinus node has arrested but who
+                // has a stable junctional escape at 45. Down-rating below 45 lets
+                // the escape emerge: narrow QRS, no P wave, still perfusing.
+                deviceSetup:  { mode: 'VVI', rate: 70, vOutput: 5, vSensing: 2 },
+                patientSetup: {
+                    atrialRate: 0, avConduction: true, prInterval: 160, conductionRatio: 1,
+                    escape: { focus: 'junctional', rate: 45 },
+                    vThreshold: 3, vAmplitude: 8
+                },
+                timeline: [],
+                debrief: `<h4>What should have happened</h4>
+                    <ul>
+                      <li>Every beat paced at 70 on arrival.</li>
+                      <li><b>Gradually</b> down-rate while watching the ECG and the arterial trace.</li>
+                      <li>Below 45 the box stops pacing and a narrow junctional escape at 45 appears — the heart rate stops following the dial. That is the answer.</li>
+                      <li>Restore the rate promptly. Conclusion: <i>not dependent, stable escape at 45, safe to threshold test.</i></li>
+                    </ul>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li>Switching the box off instead of down-rating.</li>
+                      <li>Not watching the arterial trace while down-rating.</li>
+                      <li>Forgetting to restore the settings.</li>
+                    </ul>
+                    <h4>Pearl</h4>
+                    <ul>
+                      <li>Mechanically trivial, clinically the riskiest routine manoeuvre — on a dependent patient the same actions induce asystole. Dependence dictates how aggressively you may test, so it is a prerequisite, not a formality. [1,4]</li>
+                    </ul>`
+            },
+            {
+                id: 'sc1b',
+                tier: 1,
+                name: '1b — The dependent patient',
+                objectives: [
+                    'Recognise pacing dependence and stop',
+                    'Say what backup is needed before any threshold test'
+                ],
+                vignette: 'Same routine check, different patient.',
+                // Identical drill, opposite result: no escape focus at all.
+                // Down-rating never reveals an intrinsic beat -- the heart rate
+                // simply follows the dial down and the blood pressure falls.
+                deviceSetup:  { mode: 'VVI', rate: 70, vOutput: 5, vSensing: 2 },
+                patientSetup: {
+                    atrialRate: 0, avConduction: true, prInterval: 160, conductionRatio: 1,
+                    escape: null,
+                    vThreshold: 3, vAmplitude: 8
+                },
+                timeline: [],
+                debrief: `<h4>What should have happened</h4>
+                    <ul>
+                      <li>Down-rating cautiously: the rate follows the dial <b>all the way down</b> and no intrinsic beat ever appears. Every beat is still paced at 30 and the arterial pressure falls.</li>
+                      <li>That is the finding — there is nothing underneath. Restore the rate immediately.</li>
+                      <li>Declare: <i>pacing dependent. Do not threshold test without transcutaneous backup and a senior present.</i></li>
+                    </ul>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li>Pushing on "to see the underlying rhythm" — there isn't one, and you are simply making the patient more bradycardic.</li>
+                      <li>Disconnecting the lead to "check" — that is an asystolic arrest, not a test.</li>
+                      <li>No pads, no drugs, no plan verbalised.</li>
+                    </ul>
+                    <h4>Pearl</h4>
+                    <ul>
+                      <li>In dependent patients threshold testing carries real risk: pads on, drugs available, senior aware. This is why Scenario 1 precedes everything. [1,4]</li>
+                    </ul>`
+            },
+            {
+                id: 'sc2',
+                tier: 1,
+                name: '2 — Ventricular capture threshold',
+                objectives: [
+                    'Determine the ventricular capture threshold',
+                    'Set the output to a correct safety margin'
+                ],
+                vignette: 'This is the patient you just established is not dependent. Find the ventricular capture threshold and set a safe output.',
+                // Same patient as Scenario 1 (junctional escape 45) -- the spiral
+                // the script intends. Paced at 60, comfortably above the escape,
+                // so every beat is paced and loss of capture is unmasked.
+                deviceSetup:  { mode: 'VVI', rate: 60, vOutput: 5, vSensing: 2 },
+                patientSetup: {
+                    atrialRate: 0, avConduction: true, prInterval: 160, conductionRatio: 1,
+                    escape: { focus: 'junctional', rate: 45 },
+                    vThreshold: 1.5, vAmplitude: 8
+                },
+                timeline: [],
+                debrief: `<h4>What should have happened</h4>
+                    <ul>
+                      <li>Confirm 1:1 capture and that the paced rate is above the intrinsic rate.</li>
+                      <li>Reduce the output slowly. At <b>1.5 mA</b> capture is lost: the spike is still there, but no QRS follows it and no pulse appears on the arterial trace. The junctional escape at 45 shows through between the failing spikes.</li>
+                      <li>Threshold = 1.5 mA (the last output that captured). Set the output to <b>2–3×</b> that: 3–4.5 mA.</li>
+                    </ul>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li>Reading loss of capture as loss of <i>output</i> — the spike is still present, so the output is fine.</li>
+                      <li>Setting the output only marginally above threshold.</li>
+                      <li>Testing at a rate below intrinsic, so intrinsic beats mask the loss of capture.</li>
+                    </ul>
+                    <h4>Pearls</h4>
+                    <ul>
+                      <li>Threshold should ideally be &lt; 1 mA; a rising threshold suggests a lead–tissue interface problem (fibrosis, oedema, dislodgement). [1,2]</li>
+                      <li>Distinguish <b>electrical</b> capture (QRS on the ECG) from <b>mechanical</b> capture (a pulse on the arterial line). Confirm both. [3,5]</li>
+                    </ul>`
+            },
+            {
+                id: 'sc3',
+                tier: 1,
+                name: '3 — Ventricular sensing threshold',
+                objectives: [
+                    'Determine the sensing threshold using the correct sequence',
+                    'Verbalise sensitivity changes as a direction in mV, not "up/down"'
+                ],
+                vignette: 'This patient has their own rhythm at about 60. Find the ventricular sensing threshold and set a safe sensitivity.',
+                // Intrinsic sinus at 60 with intact conduction; the R wave the
+                // sense amplifier sees is 4 mV. The box is deliberately set to a
+                // rate BELOW intrinsic so it is watching, not pacing.
+                deviceSetup:  { mode: 'VVI', rate: 40, vOutput: 5, vSensing: 2 },
+                patientSetup: {
+                    atrialRate: 60, avConduction: true, prInterval: 160, conductionRatio: 1,
+                    escape: null,
+                    vThreshold: 3, vAmplitude: 4
+                },
+                timeline: [],
+                debrief: `<h4>What should have happened</h4>
+                    <ul>
+                      <li>Confirm the set rate is <b>below</b> the intrinsic rate, so the box is sensing rather than pacing. The V sense LED flashes with each intrinsic R wave.</li>
+                      <li>Raise the mV number stepwise (<b>less</b> sensitive). Above <b>4 mV</b> the box stops sensing: the sense LED goes quiet and asynchronous spikes start marching into the intrinsic beats.</li>
+                      <li>Sensing threshold = 4 mV. Set the working sensitivity to about <b>half</b> that — 2 mV — i.e. more sensitive, a 2:1 margin.</li>
+                    </ul>
+                    <h4>The sensitivity trap</h4>
+                    <ul>
+                      <li><b>Lower mV = MORE sensitive.</b> "Turn the sensitivity down" is ambiguous and banned. Say "more sensitive / lower the mV" or "less sensitive / raise the mV".</li>
+                    </ul>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li>Leaving the rate above intrinsic, so there is nothing to sense.</li>
+                      <li>Confusing the sense LED with the pace LED.</li>
+                    </ul>
+                    <h4>Pearls</h4>
+                    <ul>
+                      <li>Normal sensed R waves are 2–5 mV; a low-amplitude signal (post-MI, fibrosis) causes undersensing. [3,4]</li>
+                      <li>The 2:1 margin is convention, not trial-derived. Flagged. [2]</li>
+                    </ul>`
+            },
+            {
+                id: 'sc4',
+                tier: 1,
+                name: '4 — The integrated daily check',
+                objectives: [
+                    'Perform a full structured daily pacing review end to end',
+                    'Include the atrial channel'
+                ],
+                vignette: 'Nothing is wrong with this patient. Do your full daily pacing check, out loud, and document the numbers.',
+                // Sinus 55 conducting 1:1 with a prolonged PR of 220 ms. Because
+                // the AV dial is set to 160 ms -- shorter than that PR -- the box
+                // genuinely paces AV-sequentially, which is what this scenario has
+                // to demonstrate. It also means down-rating ALONE will not unmask
+                // the patient's own conduction: the box goes on tracking the
+                // atrium and pacing the ventricle. To see the conducted beat the
+                // trainee must also lengthen the AV interval past the native PR.
+                // Atrial threshold (2 mA) is deliberately higher than ventricular
+                // (1 mA), as atrial leads usually are.
+                deviceSetup:  { mode: 'DDD', rate: 70, avInterval: 160, aOutput: 8, vOutput: 5, aSensing: 2, vSensing: 2 },
+                patientSetup: {
+                    atrialRate: 55, avConduction: true, prInterval: 220, conductionRatio: 1,
+                    escape: null,
+                    aThreshold: 2, vThreshold: 1, aAmplitude: 3, vAmplitude: 8
+                },
+                timeline: [],
+                debrief: `<h4>The structured sequence</h4>
+                    <ul>
+                      <li>Circuit and connections: patient → leads → correct ports → box → battery.</li>
+                      <li>Mode and rate appropriate.</li>
+                      <li><b>Establish dependence first</b> (Scenario 1 method) — but note the trap below.</li>
+                      <li>Capture threshold both chambers; set a 2–3× margin. <b>Atrial 2 mA, ventricular 1 mA</b> — the atrial threshold is the higher of the two, as atrial leads usually are.</li>
+                      <li>Sensing threshold both chambers; set the margin.</li>
+                      <li>Document everything, then confirm capture is restored.</li>
+                    </ul>
+                    <h4>The trap: down-rating alone does not unmask this patient</h4>
+                    <ul>
+                      <li>Down-rate below 55 and the atrial pacing stops — the patient's own sinus at 55 takes over and is tracked. That proves the <b>sinus node</b> works.</li>
+                      <li>But the ventricle is <i>still paced</i>, because the box tracks each sensed P and paces the ventricle after the AV interval (160 ms), which is shorter than this patient's PR of 220 ms. You have learnt nothing about AV conduction.</li>
+                      <li>To unmask it, <b>lengthen the AV interval</b> past the native PR (try 250 ms). The conducted narrow QRS now arrives first, is sensed, and inhibits the ventricular pace. Intact conduction, sinus 55: <b>not dependent</b>. Then put the AV interval back.</li>
+                    </ul>
+                    <h4>What loss of capture looks like here</h4>
+                    <ul>
+                      <li>Lose <b>atrial</b> capture (output &lt; 2 mA): the atrial spike remains but produces no P wave.</li>
+                      <li>Lose <b>ventricular</b> capture (output &lt; 1 mA): the spike produces no wide paced QRS — but because AV conduction is intact, a <i>narrow conducted</i> QRS still follows shortly after. Loss of capture does not mean asystole in a conducting patient. Read the QRS morphology, not merely the presence of a complex.</li>
+                    </ul>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li>Skipping the circuit check and going straight to the numbers.</li>
+                      <li>Testing thresholds before establishing dependence.</li>
+                      <li>Not documenting.</li>
+                    </ul>
+                    <h4>Pearl</h4>
+                    <ul>
+                      <li>A systematic sequence (circuit → mode → rate → capture → sensitivity) prevents missed faults, and is the backbone of all the troubleshooting scenarios. [4]</li>
+                    </ul>`
+            },
+
+            // ---------------- TIER 2 ----------------
+            // The spiral: every Tier 2 fault can only be diagnosed by re-running
+            // a Tier 1 skill. The trainee is told to fix the problem, not which
+            // test to run -- choosing the right test IS the assessment.
+            {
+                id: 'sc5',
+                tier: 2,
+                name: '5 — Failure to capture',
+                objectives: [
+                    'Distinguish failure to capture from failure to output',
+                    'Systematically restore capture, and look for a reason'
+                ],
+                vignette: 'Nurse calls you: the monitor looks wrong. Sort it out.',
+                // Re-tests Scenario 2. The threshold has risen to 4 mA but the
+                // output is still set at the 3 mA that used to be plenty: spikes
+                // are delivered and are ineffective. A ventricular escape at 40
+                // means the patient tolerates it while the trainee works.
+                deviceSetup:  { mode: 'VVI', rate: 70, vOutput: 3, vSensing: 2 },
+                patientSetup: {
+                    atrialRate: 0, avConduction: false, escape: { focus: 'ventricular', rate: 40 },
+                    vThreshold: 4, vAmplitude: 8
+                },
+                timeline: [],
+                debrief: `<h4>The diagnosis</h4>
+                    <ul>
+                      <li>Spikes are <b>present</b> but no QRS follows them. The output is being delivered — it is simply not capturing. That is <b>failure to capture</b>, not failure to output.</li>
+                      <li>The discriminator is the spike. Spikes present → the circuit and the generator are working; the problem is at the lead–tissue interface. Spikes absent → the problem is upstream (see Scenario 8).</li>
+                      <li>The patient's own ventricular escape at 40 is carrying them, which is why they are still alive and why you have time to think.</li>
+                    </ul>
+                    <h4>The fix</h4>
+                    <ul>
+                      <li>Check and tighten the connections; confirm the correct port and polarity.</li>
+                      <li><b>Re-run the capture threshold</b> (Scenario 2). It has risen from 1.5 mA to <b>4 mA</b>.</li>
+                      <li>Set the output to 2–3× the <i>new</i> threshold: 8–12 mA. Record the new number.</li>
+                      <li>Then look for the reason: electrolytes (especially K⁺), ischaemia, acidosis, hypoxia, drugs, recent defibrillation.</li>
+                    </ul>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li>Calling it output failure — the spikes are right there.</li>
+                      <li>Cranking the output to maximum without recording the new threshold, so nobody knows how bad the trend is.</li>
+                      <li>Fixing the number and never asking why it moved.</li>
+                    </ul>
+                    <h4>Pearls</h4>
+                    <ul>
+                      <li>Causes: mechanical first (dislodgement, loose connection, output too low), then fibrosis, infarction, electrolyte disturbance, post-defibrillation, drugs (flecainide, sotalol, beta-blockers, lignocaine, verapamil). [4]</li>
+                      <li>In bipolar leads the negative electrode fibroses first; reversing the leads or converting to unipolar can recapture. [4,6]</li>
+                      <li>A rising threshold is a <i>trend</i>, and a trend needs a plan — it may reach a level your generator cannot deliver. See Scenario 12.</li>
+                    </ul>`
+            },
+            {
+                id: 'sc6',
+                tier: 2,
+                name: '6 — Undersensing',
+                objectives: [
+                    'Recognise undersensing on the ECG',
+                    'Correct it through the sensing threshold, in the right direction'
+                ],
+                vignette: "Something's off with how the pacemaker is behaving around the patient's own beats.",
+                // Re-tests Scenario 3. The patient's R wave is only 3 mV (a small
+                // signal -- infarct, fibrosis) and the box is set at 6 mV, so it is
+                // blind to them and paces straight through the intrinsic rhythm.
+                deviceSetup:  { mode: 'VVI', rate: 50, vOutput: 5, vSensing: 6 },
+                patientSetup: {
+                    atrialRate: 75, avConduction: true, prInterval: 160, conductionRatio: 1,
+                    escape: null,
+                    vThreshold: 3, vAmplitude: 3
+                },
+                timeline: [],
+                debrief: `<h4>The diagnosis</h4>
+                    <ul>
+                      <li>The patient has a perfectly good rhythm of their own at 75, and the box is set to 50 — so it should be silent. Instead it is pacing straight through them, spikes landing on and just after native complexes.</li>
+                      <li>The box is not <i>seeing</i> the intrinsic beats: <b>undersensing</b>. The V sense LED is not tracking.</li>
+                      <li>This is not failure to capture — capture is fine; several of those spikes are producing wide paced beats. The failure is on the sensing side.</li>
+                    </ul>
+                    <h4>The fix</h4>
+                    <ul>
+                      <li><b>Re-run the sensing threshold</b> (Scenario 3). This patient's R wave is only <b>3 mV</b> — a small signal — and the box is set at 6 mV, so it cannot see them.</li>
+                      <li>Make the box <b>more sensitive → LOWER the mV</b>, below 3 mV, with a margin: about 1.5 mV.</li>
+                      <li>Confirm the box now inhibits on the intrinsic beats and the sense LED tracks every one.</li>
+                    </ul>
+                    <h4>The sensitivity trap</h4>
+                    <ul>
+                      <li>The instinct is to "turn the sensitivity up", and on this dial that means raising the mV — which makes it <i>less</i> sensitive and makes the problem worse. Say the direction in mV, every time.</li>
+                    </ul>
+                    <h4>Pearls</h4>
+                    <ul>
+                      <li>Undersensing → competitive overpacing, with a spike landing on a T wave and inducing VT/VF. This is dangerous, not untidy. [4,7]</li>
+                      <li>Causes: sensitivity set too insensitive; a genuinely low-amplitude signal (infarct, fibrosis); lead problem; electrolyte disturbance. Normal R waves are 2–5 mV. [3,7]</li>
+                    </ul>`
+            },
+            {
+                id: 'sc7',
+                tier: 2,
+                name: '7 — Oversensing causing inhibition',
+                objectives: [
+                    'Recognise oversensing as a cause of inappropriate pacing pauses',
+                    'Correct the sensitivity, and know the patient\'s safety net'
+                ],
+                vignette: 'Monitor shows intermittent long pauses. The output seems to keep cutting out.',
+                // Re-tests Scenarios 1 and 3. The V channel is set at 0.8 mV --
+                // sensitive enough to see a 1.5 mV muscle artefact, which it
+                // mistakes for intrinsic activity and inhibits on. The patient's
+                // own rhythm is a slow ventricular escape at 40, so the pauses
+                // matter. The window that fixes it: above 1.5 mV (ignore the
+                // artefact), below 8 mV (still see real beats).
+                deviceSetup:  { mode: 'VVI', rate: 60, vOutput: 5, vSensing: 0.5 },
+                patientSetup: {
+                    atrialRate: 0, avConduction: false, escape: { focus: 'ventricular', rate: 40 },
+                    vThreshold: 3, vAmplitude: 8,
+                    noise: { channel: 'V', amplitude: 1.5, rate: 100 }
+                },
+                timeline: [],
+                debrief: `<h4>The diagnosis</h4>
+                    <ul>
+                      <li>The box is set to 60 and the patient is running at 40. In the pauses there is <b>no spike at all</b> — so the output is not failing, it is being <i>withheld</i>. The box is inhibiting.</li>
+                      <li>A demand pacemaker inhibits when it senses something. There are no intrinsic beats in those gaps, so it is sensing something that is not a heartbeat: <b>oversensing</b>. Look at the baseline — there is artefact on it, and the V sense LED is flashing to it.</li>
+                      <li>The chain is: artefact → mistaken for intrinsic activity → output withheld → pause. The patient's escape at 40 is all that is holding them up.</li>
+                    </ul>
+                    <h4>The fix</h4>
+                    <ul>
+                      <li>Make the box <b>less sensitive → RAISE the mV</b>. The artefact is about 1.5 mV and the real R wave is 8 mV, so there is a window: anywhere above ~1.5 and comfortably below 8. Around <b>3 mV</b> ignores the noise and still sees every real beat. Pacing at 60 returns immediately.</li>
+                      <li>Then check the patient's safety net (Scenario 1): what is underneath, and would those pauses have killed them? Here, an escape at 40 — poor, but present.</li>
+                      <li>If they were unstable, <b>ASYNC (VOO)</b> is a bridge: it paces blind on its timers and cannot be fooled by noise. Try it — the pauses stop instantly.</li>
+                    </ul>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li>Treating the pauses as output failure and chasing connections. The generator is working perfectly; it is doing exactly what it was told.</li>
+                      <li>Turning the <b>output</b> up. This is a sensing problem. The output was never the issue.</li>
+                      <li>Making it <i>more</i> sensitive (lowering the mV) — the wrong direction, and it gets worse.</li>
+                      <li>Leaving it in VOO and walking away. Asynchronous pacing has no protection against R-on-T; it is a bridge, not a fix.</li>
+                    </ul>
+                    <h4>Pearls</h4>
+                    <ul>
+                      <li>Oversensed signals: large P or T waves, skeletal muscle activity, lead contact problems, external electrical interference. [4]</li>
+                      <li>Note that the artefact is still on the trace after you fix it. You have not stopped the noise — you have stopped the <i>box believing</i> the noise. [4]</li>
+                    </ul>`
+            },
+            {
+                id: 'sc8',
+                tier: 2,
+                name: '8 — Output failure / no spikes',
+                objectives: [
+                    'Recognise true output failure (spikes absent)',
+                    'Work the circuit systematically, with a backup running'
+                ],
+                vignette: "The pacemaker's not doing anything and the patient's heart rate is 35.",
+                // Re-tests the circuit check and Scenario 1. A fractured cable on
+                // the ventricular channel: the generator runs its cycles and the
+                // PACE LED still flashes at 70 -- it believes it is pacing -- but
+                // nothing reaches the patient, so there is not a single spike on
+                // the ECG. Raising the output cannot help. Async cannot help.
+                // Only re-seating the connection restores output.
+                deviceSetup:  { mode: 'VVI', rate: 70, vOutput: 5, vSensing: 2 },
+                patientSetup: {
+                    atrialRate: 0, avConduction: false, escape: { focus: 'ventricular', rate: 35 },
+                    vThreshold: 3, vAmplitude: 8,
+                    connectionFault: 'V'
+                },
+                timeline: [],
+                debrief: `<h4>The diagnosis</h4>
+                    <ul>
+                      <li>There is <b>not one spike</b> on the ECG, though the box is programmed to pace at 70. Absent spikes = <b>output failure</b>. Contrast Scenario 5, where the spikes were present and merely ineffective.</li>
+                      <li>Note the trap: the <b>pace LED is still flashing at 70</b>. The generator believes it is pacing. It is delivering pulses into a broken circuit. Believe the ECG, not the LED — the spike on the trace is the only proof that current reached the patient.</li>
+                      <li>The patient's own escape at 35 is the entire cardiac output. This is a rescue, not a puzzle.</li>
+                    </ul>
+                    <h4>The fix — while a backup is being prepared</h4>
+                    <ul>
+                      <li>Say out loud, first: <b>get the transcutaneous pads on and chronotropes drawn up.</b> Then troubleshoot.</li>
+                      <li>Work the circuit in order: patient → lead → ports → cable → box → battery. Here it is the ventricular connection — <b>re-seat the V lead</b> and the output returns instantly.</li>
+                      <li>Note what did <i>not</i> work, and why: turning the output to maximum pushes no current through a broken circuit, and ASYNC does not either. Asynchronous mode fixes output failure only when the cause is oversensing-driven inhibition — a real cable fault is deaf to it.</li>
+                    </ul>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li>Confusing this with failure to capture, and spending the next two minutes on the output dial. In failure to capture there are spikes.</li>
+                      <li>Troubleshooting with no backup running. The patient is at 35 and dependent on an escape rhythm you do not control.</li>
+                      <li>Never checking the battery.</li>
+                    </ul>
+                    <h4>Pearls</h4>
+                    <ul>
+                      <li>Output-failure causes: lead malfunction, unstable connection, insufficient power, cross-talk inhibition, oversensing. [4]</li>
+                      <li>Rescue sequence: power/battery/connections → maximum output → asynchronous mode → direct-to-lead → transcutaneous → CPR and chronotropes. [4]</li>
+                    </ul>`
+            },
+
+            // ---------------- TIER 3 ----------------
+            // Integrated, time-pressured, high-stakes. Every one forces the trainee
+            // back through several Tier 1 skills at once, and each carries a named
+            // syndrome they are expected to recognise.
+            {
+                id: 'sc9',
+                tier: 3,
+                name: '9 — Lead displacement dysrhythmia',
+                objectives: [
+                    'Recognise intermittent capture with ectopy as a migrating lead',
+                    'Understand that a mechanical problem needs a mechanical answer'
+                ],
+                vignette: "Intermittent capture and now she's throwing ventricular ectopics. Rate's unreliable.",
+                // A lead floating in the RV. Its distance from the endocardium
+                // varies beat to beat, so the capture threshold does too (jitter),
+                // and it mechanically irritates the ventricle, causing ectopy and
+                // short runs of VT. At 75 s it crosses the septum: the paced QRS
+                // flips from LBBB to RBBB.
+                deviceSetup:  { mode: 'VVI', rate: 70, vOutput: 5, vSensing: 2 },
+                patientSetup: {
+                    atrialRate: 0, avConduction: false, escape: { focus: 'ventricular', rate: 35 },
+                    vThreshold: 4, vAmplitude: 8,
+                    thresholdJitter: 3,      // capture threshold swinging over ~1-7 mA
+                    ectopyRate: 12
+                },
+                timeline: [
+                    { at: 75000, patch: { pacedQrs: 'rbbb' } }
+                ],
+                actions: [
+                    {
+                        label: 'Reposition the patient (roll left lateral)',
+                        // The lead falls back against the endocardium -- capture
+                        // improves and the ectopy settles. Then it drifts off again.
+                        effects: [
+                            { at: 0,     patch: { vThreshold: 1.5, thresholdJitter: 0.3, ectopyRate: 2 } },
+                            { at: 25000, patch: { vThreshold: 4, thresholdJitter: 3, ectopyRate: 12 } }
+                        ]
+                    },
+                    {
+                        label: 'Apply transcutaneous pads',
+                        effects: [{ at: 0, patch: { transcutaneous: true } }]
+                    }
+                ],
+                debrief: `<h4>The diagnosis</h4>
+                    <ul>
+                      <li>Capture is <b>beat-to-beat variable</b> at an unchanged output — runs of capture alternating with failure — and there is ventricular ectopy, sometimes in short runs. That combination is the signature of a <b>displaced/floating lead</b>.</li>
+                      <li>The two findings have one cause. A lead that is not sitting against the endocardium captures unreliably, and a lead swinging inside the RV mechanically irritates it into ectopy. Intermittent capture <i>plus</i> ectopy is a mechanical diagnosis.</li>
+                      <li>Re-run the capture threshold (Scenario 2) and you will find it erratic and high — you cannot get a stable number, and that instability is itself the finding.</li>
+                    </ul>
+                    <h4>Watch the paced QRS morphology</h4>
+                    <ul>
+                      <li>Later in this scenario the paced complexes change shape: from <b>LBBB</b> (the normal look of RV apical pacing) to <b>RBBB</b> — dominantly upright. That means the stimulus is now arising from the <b>left</b> ventricle: the lead has <b>perforated the septum</b>. Get a chest X-ray and escalate urgently. [4]</li>
+                    </ul>
+                    <h4>What to do</h4>
+                    <p style="margin-bottom:6px;"><i>The trainee must ask for these out loud — they are not on the box, and they are not offered as buttons. Whether they think of them at all is the assessment.</i></p>
+                    <ul>
+                      <li>"I want to <b>reposition the patient</b>" — capture transiently improves, proving the problem is positional, not electrical. A diagnostic manoeuvre and a temporising one; the lead drifts off again.</li>
+                      <li>Increase the output. It buys capture, but it does <b>not</b> stop the ectopy, because the ectopy is mechanical. Turning the box up cannot hold a lead still.</li>
+                      <li>"I want <b>transcutaneous pads on</b>", and <b>escalate for definitive lead repositioning</b>. That is the answer. Everything else is a holding measure.</li>
+                    </ul>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li>Chasing the sensitivity. Nothing here is a sensing problem.</li>
+                      <li>Settling for a higher output and walking away, leaving a mobile lead in an irritable ventricle.</li>
+                      <li>Missing the morphology change — the one finding that turns this from urgent into an emergency.</li>
+                    </ul>`
+            },
+            {
+                id: 'sc10',
+                tier: 3,
+                name: '10 — Cross-talk → ventricular standstill',
+                objectives: [
+                    'Recognise cross-talk inhibiting the ventricular output',
+                    'Secure output FIRST in a dependent patient, then diagnose'
+                ],
+                vignette: "Dual-chamber box, patient's dependent, and the ventricle has gone quiet. Move.",
+                // The ventricular channel is set so sensitive (1.0 mV) that it sees
+                // the far-field signal of the ATRIAL stimulus (8 mA x 0.25 = 2.0 mV)
+                // and reads it as an R wave -- so it withholds the ventricular
+                // output, every single cycle. The patient has no escape. This is
+                // ventricular standstill, and the clock is running.
+                deviceSetup:  { mode: 'DDD', rate: 60, avInterval: 200, aOutput: 8, vOutput: 5, aSensing: 2, vSensing: 1 },
+                patientSetup: {
+                    atrialRate: 0, avConduction: false, escape: null,      // dependent
+                    aThreshold: 1.5, vThreshold: 3, aAmplitude: 3, vAmplitude: 8,
+                    crosstalkGain: 0.25    // mV of far-field signal per mA of atrial output
+                },
+                timeline: [],
+                debrief: `<h4>The diagnosis</h4>
+                    <ul>
+                      <li>Atrial spikes are marching along and capturing — there are P waves. The ventricle is <b>silent</b>: no ventricular spike, no QRS, no pulse, no blood pressure. And this patient has <b>no escape rhythm</b>.</li>
+                      <li>No ventricular spike means the output is being <b>withheld</b>, not failing. Something is inhibiting it. There are no intrinsic R waves to inhibit it — so the ventricular channel is sensing something that is not a heartbeat.</li>
+                      <li>It is sensing the <b>atrial stimulus itself</b>. The far-field signal from the atrial pace reaches the ventricular sense amplifier just after its brief blanking window closes, and the box mistakes it for an R wave. That is <b>cross-talk</b>, and its consequence here is ventricular standstill.</li>
+                    </ul>
+                    <h4>Order of operations — this is the lesson</h4>
+                    <ul>
+                      <li><b>Secure the output first. Diagnose second.</b> In a dependent patient with a silent ventricle you do not have time to be elegant. Hit <b>ASYNC (DOO)</b>: a box that senses nothing cannot be inhibited by anything, and the ventricle is paced on the next cycle.</li>
+                      <li><i>Then</i> fix the cause, with a pulse in the room. Two levers, and both work:
+                        <ul>
+                          <li>Make the ventricular channel <b>less sensitive → raise the mV</b> above the artefact (about 2.0 mV here — so 2.5–3 mV). It still sees real R waves at 8 mV.</li>
+                          <li>Or turn the <b>atrial output down</b> (8 → 3 mA). The artefact scales with the atrial output, so a smaller stimulus throws a smaller shadow. Keep a capture margin: the atrial threshold is 1.5 mA.</li>
+                        </ul>
+                      </li>
+                      <li>Come back out of ASYNC and confirm AV-sequential capture has returned.</li>
+                    </ul>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li><b>Freezing on the diagnosis while the patient has no cardiac output.</b> Pace first.</li>
+                      <li>Turning the ventricular <i>output</i> up. The output was never failing — it was being withheld.</li>
+                      <li>Making the ventricular channel <i>more</i> sensitive. That is the wrong direction and it deepens the standstill.</li>
+                      <li>Leaving the box in DOO and calling it fixed.</li>
+                    </ul>
+                    <h4>Pearl</h4>
+                    <ul>
+                      <li>Real dual-chamber generators defend against exactly this with <i>ventricular safety pacing</i>: something sensed in the crosstalk window triggers a ventricular pace at a short AV delay rather than inhibiting. Many temporary external boxes have no such feature — which is why you must know this failure mode. [4]</li>
+                    </ul>`
+            },
+            {
+                id: 'sc11',
+                tier: 3,
+                name: '11 — Pacemaker-mediated tachycardia',
+                objectives: [
+                    'Recognise PMT / endless-loop tachycardia',
+                    'Terminate it, then stop it coming back'
+                ],
+                vignette: 'Dual-chamber patient, suddenly paced at 160 and stuck there.',
+                // The loop: V paced -> conducts BACKWARDS to the atrium in 250 ms ->
+                // that retrograde P falls outside the (too short, 200 ms) PVARP ->
+                // the box tracks it as though it were a real P -> paces V -> which
+                // conducts backwards again. The box is both the trigger and the
+                // sustainer. The rate sits exactly on the upper rate limit.
+                deviceSetup:  { mode: 'DDD', rate: 60, avInterval: 120, upperRate: 160, pvarp: 200,
+                                aOutput: 5, vOutput: 5, aSensing: 2, vSensing: 2 },
+                patientSetup: {
+                    atrialRate: 0, avConduction: false, escape: null,
+                    aThreshold: 2, vThreshold: 3, aAmplitude: 3, vAmplitude: 8,
+                    retrogradeVA: 250       // ms for the ventricle to conduct back up
+                },
+                timeline: [],
+                debrief: `<h4>The diagnosis</h4>
+                    <ul>
+                      <li>A wide-complex paced tachycardia. Every beat is preceded by a ventricular spike — so this is not the patient's tachycardia, it is <b>the box's</b>.</li>
+                      <li>The clue that settles it: the rate sits at <b>exactly 160</b> — precisely the programmed upper rate limit, and dead regular. A heart does not choose your upper rate limit as its tachycardia rate. Only a pacemaker does. <i>Turn the upper rate limit down and watch the tachycardia rate obediently follow it — that is proof.</i></li>
+                      <li>The loop: the paced ventricular beat conducts <b>backwards</b> to the atrium (250 ms). That retrograde P falls outside the PVARP (set here at only 200 ms), so the atrial channel sees it, believes it is a native P, and tracks it — pacing the ventricle. Which conducts backwards again. The box is the re-entry circuit. This is <b>pacemaker-mediated tachycardia</b>, or endless-loop tachycardia.</li>
+                    </ul>
+                    <h4>Terminate it — break the loop anywhere</h4>
+                    <ul>
+                      <li><b>ASYNC (DOO)</b>, the equivalent of slapping a magnet on: the box stops listening, so it cannot track the retrograde P. The loop dies instantly. (In permanent devices this is exactly what a magnet does.)</li>
+                      <li>Or switch to a <b>non-tracking mode</b> — disconnect the atrial channel to give VVI. If the box is not watching the atrium, it cannot chase it. You give up AV synchrony; accept the trade.</li>
+                    </ul>
+                    <h4>Then stop it coming back</h4>
+                    <ul>
+                      <li><b>Extend the PVARP</b> beyond the retrograde conduction time. VA conduction here takes 250 ms, so a PVARP of 200 ms is simply too short — take it to <b>300 ms or more</b> and the retrograde P now lands inside the atrial refractory window, is not sensed, and cannot be tracked. The loop can no longer start. This is the definitive fix, and you can then return the box to DDD.</li>
+                      <li>Adenosine can be used to break the retrograde limb of the circuit.</li>
+                    </ul>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li>Treating it as a primary tachyarrhythmia — reaching for amiodarone, or worse, shocking it.</li>
+                      <li>Missing the upper-rate-limit ceiling, which is the free diagnosis sitting on the monitor.</li>
+                      <li>Terminating it and walking away without extending the PVARP. It will simply start again.</li>
+                    </ul>
+                    <h4>Pearl</h4>
+                    <ul>
+                      <li>Antegrade block does not mean retrograde block. A patient in complete heart block can conduct perfectly well backwards — which is precisely the patient who has a dual-chamber box in the first place. [4]</li>
+                    </ul>`
+            },
+            {
+                id: 'sc12',
+                tier: 3,
+                name: '12 — Rising threshold in a dependent patient',
+                objectives: [
+                    'Integrate the whole skill set under genuine time pressure',
+                    'Prioritise: secure output, then diagnose, then treat the cause'
+                ],
+                vignette: "Dependent patient, and capture is starting to drop out. Clock's running.",
+                // The scenario the whole timeline mechanism was built for. The
+                // capture threshold climbs in real time -- 1 -> 3 -> 5 -> 7 mA --
+                // while the output sits at 5. The patient has NO escape. Do nothing
+                // and it goes: capturing -> capturing -> intermittent -> asystole.
+                deviceSetup:  { mode: 'VVI', rate: 70, vOutput: 5, vSensing: 2 },
+                patientSetup: {
+                    atrialRate: 0, avConduction: false, escape: null,     // dependent
+                    vThreshold: 1, vAmplitude: 8,
+                    thresholdJitter: 0.7   // so the failure arrives INTERMITTENTLY first
+                },
+                timeline: [
+                    { at:  30000, patch: { vThreshold: 3 } },   // still capturing at 5 mA
+                    { at:  75000, patch: { vThreshold: 5 } },   // intermittent: the warning
+                    { at: 120000, patch: { vThreshold: 7 } }    // capture lost -> asystole
+                ],
+                actions: [
+                    {
+                        label: 'Apply transcutaneous pads',
+                        effects: [{ at: 0, patch: { transcutaneous: true } }]
+                    },
+                    {
+                        label: 'Treat hyperkalaemia (calcium, insulin–dextrose)',
+                        // Treating the cause pulls the threshold back down -- and
+                        // stops it climbing. This is the only action that does.
+                        cancelTimeline: true,
+                        effects: [
+                            { at: 30000, patch: { vThreshold: 1.5, thresholdJitter: 0.2 } }
+                        ]
+                    }
+                ],
+                debrief: `<h4>What was happening</h4>
+                    <ul>
+                      <li>The ventricular capture threshold was <b>rising in real time</b> — 1 → 3 → 5 → 7 mA — while your output sat at 5 mA. This patient has <b>no escape rhythm at all</b>. When the threshold crossed the output, they had no cardiac output.</li>
+                      <li>The warning arrived before the crisis: capture went <b>intermittent</b> first, as the threshold hovered around the output and jittered across it beat to beat. Intermittent capture in a dependent patient is an emergency in slow motion. It is the moment to act, not the moment to observe.</li>
+                    </ul>
+                    <h4>The priority order — the entire point of this scenario</h4>
+                    <p style="margin-bottom:6px;"><i>Steps 2 and 4 are not on the box and are not offered as buttons. The trainee has to ask for them out loud. Whether they think of them, and in what order, IS the assessment — so say nothing and let the clock run.</i></p>
+                    <ol>
+                      <li><b>Secure output.</b> Turn the output up, hard, now. You can work out why afterwards; you cannot resuscitate a diagnosis. Go well above the threshold — and remember it is still climbing, so leave real headroom.</li>
+                      <li><b>Get the backup on.</b> "Pads on, chronotropes drawn up, call the senior." You are one step from a generator that cannot deliver enough current.</li>
+                      <li><b>Confirm the circuit</b> — connections, port, polarity — so you are not treating a mechanical problem as a metabolic one.</li>
+                      <li><b>Find and treat the cause.</b> Here it is hyperkalaemia. Treating it is the only thing that actually brings the threshold back down and stops it climbing. Everything else was buying time — and a trainee who chases the threshold up the output dial and never asks <i>why it is moving</i> has failed this scenario, however long they keep the patient alive.</li>
+                      <li><b>Re-test and document</b> the new threshold and set a fresh 2–3× margin once stable.</li>
+                    </ol>
+                    <h4>Common errors</h4>
+                    <ul>
+                      <li>Diagnosing before securing output in a dependent patient. Pace first.</li>
+                      <li>Chasing the threshold up with the output and never asking why it is moving — until you reach maximum output and have nowhere left to go.</li>
+                      <li>Reaching maximum output with no pads on and no senior aware.</li>
+                      <li>Fixing it and never re-testing or documenting the new threshold, so the next person inherits an unknown.</li>
+                    </ul>
+                    <h4>Pearls</h4>
+                    <ul>
+                      <li>Reversible threshold-raising causes: hyperkalaemia, hypoxia, acidosis, ischaemia, class I antiarrhythmics. Treat the cause while temporarily increasing the output. [2]</li>
+                      <li>This crisis <i>is</i> the daily check, compressed: secure output → circuit → cause → margin. Every Tier 1 skill, at speed. If the routine is solid, the emergency is survivable. [1,2,4]</li>
+                    </ul>`
+            }
+        ];
+
+        // ---- Scenario engine ----------------------------------------
+
+        let appMode = 'sandbox';       // 'sandbox' | 'teaching'
+        let activeScenario = null;
+        let scenarioStart = 0;
+        let scenarioPatches = [];      // {time, patch, source} -- due patches to the patient
+
+        // Re-seed physiology and device timers, and clear the traces, so a
+        // scenario starts from a clean sheet rather than mid-cycle.
+        function resetForScenario() {
+            lastAtrialActivation = simTime;
+            lastVentActivation = simTime;
+            avConductCounter = 0;
+            scheduledQRS = null;
+
+            scheduledRetroP = null;
+            scheduledCrosstalk = null;
+
+            escapeRef = simTime;
+            lastAtrialEvent = simTime;
+            aviStart = null;
+            aviWasPaced = false;
+
+            atrialBlankUntil = 0;
+            ventBlankUntil = 0;
+            atrialRefractoryUntil = 0;
+            ventRefractoryUntil = 0;
+            pvarpUntil = 0;
+
+            lastAtrialPaceTime = -100000;
+            lastVentPaceTime = -100000;
+            lastAtrialSenseTime = -100000;
+            lastVentSenseTime = -100000;
+            lastNoiseTime = simTime;
+
+            lastEctopyTime = simTime;
+            nextEctopicTime = 0;
+            ectopyBurstLeft = 0;
+
+            // Identical seed every time: a scenario that looks irregular but
+            // replays exactly, so it can be validated and fairly assessed.
+            seedRng(0x5eed1234);
+
+            ecgEvents = [];
+            ventEventTimes = [];
+            ecgBuffer = [];
+            artBuffer = [];
+        }
+
+        // Push `state` back out to the sliders and switches after a scenario has
+        // set the box up, so the trainee sees the settings they were handed.
+        function syncControlsToState() {
+            document.getElementById('rate').value = state.rate;
+            document.getElementById('upperRate').value = state.upperRate;
+            document.getElementById('avInterval').value = state.avInterval;
+            document.getElementById('pvarp').value = state.pvarp;
+            document.getElementById('aOutput').value = state.aOutput;
+            document.getElementById('vOutput').value = state.vOutput;
+            document.getElementById('aSensing').value = state.aSensing;
+            document.getElementById('vSensing').value = state.vSensing;
+            document.getElementById('atrialLead').checked = state.atrialLead;
+            document.getElementById('ventLead').checked = state.ventLead;
+            document.getElementById('asyncSwitch').checked = state.async;
+        }
+
+        // A scenario names a mode; in this device the DDD family is expressed
+        // through which leads are connected, so translate.
+        function applyDeviceSetup(setup) {
+            if (!setup) return;
+            // Every scenario hands the trainee a box in demand mode unless it
+            // explicitly says otherwise.
+            state.async = !!setup.async;
+            switch (setup.mode) {
+                case 'DDD': state.mode = 'DDD'; state.atrialLead = true;  state.ventLead = true;  break;
+                case 'VVI': state.mode = 'DDD'; state.atrialLead = false; state.ventLead = true;  break;
+                case 'AAI': state.mode = 'DDD'; state.atrialLead = true;  state.ventLead = false; break;
+                default:    if (setup.mode) state.mode = setup.mode;      break;   // DOO / VOO / OFF
+            }
+            if (setup.atrialLead !== undefined) state.atrialLead = setup.atrialLead;
+            if (setup.ventLead   !== undefined) state.ventLead   = setup.ventLead;
+            if (setup.rate       !== undefined) state.rate       = setup.rate;
+            if (setup.upperRate  !== undefined) state.upperRate  = setup.upperRate;
+            if (setup.pvarp      !== undefined) state.pvarp      = setup.pvarp;
+            if (setup.avInterval !== undefined) state.avInterval = setup.avInterval;
+            if (setup.aOutput    !== undefined) state.aOutput    = setup.aOutput;
+            if (setup.vOutput    !== undefined) state.vOutput    = setup.vOutput;
+            if (setup.aSensing   !== undefined) state.aSensing   = setup.aSensing;
+            if (setup.vSensing   !== undefined) state.vSensing   = setup.vSensing;
+            syncControlsToState();
+        }
+
+        function startScenario(id) {
+            const scenario = SCENARIOS.find(s => s.id === id);
+            if (!scenario) return;
+
+            activeScenario = scenario;
+
+            // Start from a normal patient, then overlay the scenario's truth, so
+            // a scenario only has to state what is abnormal about its patient.
+            patient = Object.assign(makePatient('sinus80'), scenario.patientSetup);
+            applyDeviceSetup(scenario.deviceSetup);
+
+            scenarioStart = simTime;
+
+            // One queue holds everything that is going to happen to this patient.
+            // The scenario's own timeline goes in at the start; a trainee's action
+            // pushes more entries in later. Nothing else distinguishes them, which
+            // is why a treatment that takes 30 seconds to work and a threshold that
+            // rises on its own use exactly the same machinery.
+            scenarioPatches = (scenario.timeline || []).map(entry => ({
+                time: scenarioStart + entry.at,
+                patch: entry.patch,
+                source: 'timeline'
+            }));
+
+            resetForScenario();
+            renderScenarioPanel();
+            updateDisplay();
+        }
+
+        function stopScenario() {
+            activeScenario = null;
+            scenarioPatches = [];
+            renderScenarioPanel();
+        }
+
+        // Called once per physics tick. This is the whole of the "things move with
+        // time" mechanism: a patch to the patient that comes due at a given moment.
+        // The physics simply re-derives from the patient it is handed on the next
+        // tick, so nothing else in the engine needs to know that time passed.
+        function tickScenario(now) {
+            if (!activeScenario || !scenarioPatches.length) return;
+            const due = scenarioPatches.filter(p => now >= p.time);
+            if (!due.length) return;
+            for (const entry of due) Object.assign(patient, entry.patch);
+            scenarioPatches = scenarioPatches.filter(p => now < p.time);
+        }
+
+        // A trainee action: a clinical intervention that is not a dial on the box --
+        // rolling the patient, putting the pads on, treating the potassium. Its
+        // effects are scheduled relative to NOW, because treatments take time to
+        // work, and some of them (repositioning a lead) wear off again.
+        function runAction(action) {
+            if (!activeScenario) return;
+            if (action.cancelTimeline) {
+                // Treating the underlying cause stops the disease progressing:
+                // the scenario's remaining scripted deterioration is called off.
+                scenarioPatches = scenarioPatches.filter(p => p.source !== 'timeline');
+            }
+            for (const effect of (action.effects || [])) {
+                scenarioPatches.push({
+                    time: simTime + (effect.at || 0),
+                    patch: effect.patch,
+                    source: 'action'
+                });
+            }
+        }
+
+        // ---- Teaching-mode UI ---------------------------------------
+
+        function populateScenarioSelect() {
+            const select = document.getElementById('scenarioSelect');
+            const tiers = [
+                [1, 'Tier 1 — Beginner'],
+                [2, 'Tier 2 — Intermediate'],
+                [3, 'Tier 3 — Advanced']
+            ];
+            select.innerHTML = '';
+            for (const [tier, label] of tiers) {
+                const inTier = SCENARIOS.filter(s => s.tier === tier);
+                if (!inTier.length) continue;
+                const group = document.createElement('optgroup');
+                group.label = label;
+                for (const scenario of inTier) {
+                    const option = document.createElement('option');
+                    option.value = scenario.id;
+                    option.textContent = scenario.name;
+                    group.appendChild(option);
+                }
+                select.appendChild(group);
+            }
+        }
+
+        function renderScenarioPanel() {
+            const vignette   = document.getElementById('scenarioVignette');
+            const objectives = document.getElementById('scenarioObjectives');
+            const toggle     = document.getElementById('debriefToggle');
+            const debrief    = document.getElementById('scenarioDebrief');
+            const restart    = document.getElementById('scenarioRestart');
+            const start      = document.getElementById('scenarioStart');
+            const actions    = document.getElementById('scenarioActions');
+            const actionsToggle = document.getElementById('actionsToggle');
+
+            if (!activeScenario) {
+                vignette.style.display = 'none';
+                objectives.style.display = 'none';
+                toggle.style.display = 'none';
+                debrief.style.display = 'none';
+                restart.style.display = 'none';
+                actions.innerHTML = '';
+                actions.style.display = 'none';
+                actionsToggle.style.display = 'none';
+                start.textContent = 'Start scenario';
+                return;
+            }
+
+            vignette.textContent = '“' + activeScenario.vignette + '”';
+            vignette.style.display = '';
+
+            objectives.innerHTML = activeScenario.objectives
+                .map(o => '<li>' + o + '</li>').join('');
+            objectives.style.display = '';
+
+            // Clinical actions -- things that are not dials on the box. These are
+            // for the INSTRUCTOR, and are collapsed out of sight by default.
+            //
+            // They are not offered to the trainee as a menu on purpose. A visible
+            // button labelled "Treat hyperkalaemia" does not test whether they
+            // would think of treating the hyperkalaemia -- it tells them to. The
+            // trainee must say the action out loud; the instructor then fires it
+            // here, and the patient responds.
+            actions.innerHTML = '';
+            const hasActions = activeScenario.actions && activeScenario.actions.length;
+            if (hasActions) {
+                const note = document.createElement('div');
+                note.className = 'instructor-note';
+                note.textContent = 'Fire these only when the trainee asks for them out loud.';
+                actions.appendChild(note);
+                activeScenario.actions.forEach(action => {
+                    const button = document.createElement('button');
+                    button.className = 'scenario-btn secondary';
+                    button.textContent = action.label;
+                    button.addEventListener('click', () => {
+                        runAction(action);
+                        button.classList.add('done');
+                        button.textContent = '✓ ' + action.label;
+                    });
+                    actions.appendChild(button);
+                });
+            }
+            actions.style.display = 'none';
+            actionsToggle.textContent = '▸ Instructor controls';
+            actionsToggle.style.display = hasActions ? '' : 'none';
+
+            debrief.innerHTML = activeScenario.debrief;
+            debrief.style.display = 'none';
+            toggle.textContent = '▸ Reveal debrief (instructor)';
+            toggle.style.display = '';
+
+            restart.style.display = '';
+            start.textContent = 'Start selected scenario';
+        }
+
+        function setAppMode(mode) {
+            appMode = mode;
+            document.getElementById('tabSandbox').classList.toggle('active', mode === 'sandbox');
+            document.getElementById('tabTeaching').classList.toggle('active', mode === 'teaching');
+            document.getElementById('sandboxPanel').style.display  = (mode === 'sandbox')  ? '' : 'none';
+            document.getElementById('teachingPanel').style.display = (mode === 'teaching') ? '' : 'none';
+            // Teaching adds a third column; widen the container to make room.
+            document.getElementById('mainContainer').classList.toggle('teaching', mode === 'teaching');
+            // The monitor changes width when the column count changes, so the
+            // canvases must be re-measured -- otherwise the sweep speed is no
+            // longer a true 25 mm/s and the ECG grid lies.
+            resizeCanvases();
+
+            if (mode === 'sandbox') {
+                // Returning to the sandbox restores the openly-selected rhythm and
+                // a normal patient, so a scenario's abnormality cannot leak out.
+                stopScenario();
+                applyRhythmPreset(state.rhythm);
+                resetForScenario();
+            }
+            updateDisplay();
+        }
+
+        document.getElementById('tabSandbox').addEventListener('click', () => setAppMode('sandbox'));
+        document.getElementById('tabTeaching').addEventListener('click', () => setAppMode('teaching'));
+
+        document.getElementById('scenarioStart').addEventListener('click', () => {
+            startScenario(document.getElementById('scenarioSelect').value);
+        });
+
+        document.getElementById('scenarioRestart').addEventListener('click', () => {
+            if (activeScenario) startScenario(activeScenario.id);
+        });
+
+        document.getElementById('debriefToggle').addEventListener('click', e => {
+            e.preventDefault();
+            const debrief = document.getElementById('scenarioDebrief');
+            const open = debrief.style.display !== 'none';
+            debrief.style.display = open ? 'none' : '';
+            e.target.textContent = open
+                ? '▸ Reveal debrief (instructor)'
+                : '▾ Hide debrief';
+        });
+
+        document.getElementById('actionsToggle').addEventListener('click', e => {
+            e.preventDefault();
+            const actions = document.getElementById('scenarioActions');
+            const open = actions.style.display !== 'none';
+            actions.style.display = open ? 'none' : '';
+            e.target.textContent = open
+                ? '▸ Instructor controls'
+                : '▾ Hide instructor controls';
+        });
+
+        // ------------------------------------------------------------
+        //  Main loop: advance the simulation in real time.
+        // ------------------------------------------------------------
+
+        function mainLoop(ts) {
+            if (lastFrameTs === null) lastFrameTs = ts;
+            let elapsed = ts - lastFrameTs;
+            lastFrameTs = ts;
+            if (elapsed > 250) elapsed = 250; // avoid a spiral after a tab switch
+
+            tickAccumulator += elapsed;
+            while (tickAccumulator >= DT) {
+                simulateTick();
+                generateWaveforms();
+                tickAccumulator -= DT;
+            }
+
+            render();
+            updateDisplay();
+            requestAnimationFrame(mainLoop);
+        }
+
+        // Settings popup (fully in-page, so the file works with no server).
+        const settingsOverlay = document.getElementById('settingsOverlay');
+        document.getElementById('settingsBody').textContent =
+            document.getElementById('settingsText').textContent.trim();
+        document.getElementById('settingsLink').addEventListener('click', e => {
+            e.preventDefault();
+            settingsOverlay.classList.add('open');
+        });
+        document.getElementById('settingsClose').addEventListener('click', () =>
+            settingsOverlay.classList.remove('open'));
+        settingsOverlay.addEventListener('click', e => {
+            if (e.target === settingsOverlay) settingsOverlay.classList.remove('open');
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') settingsOverlay.classList.remove('open');
+        });
+
+        window.addEventListener('resize', resizeCanvases);
+        resizeCanvases();
+        populateScenarioSelect();
+        renderScenarioPanel();
+        updateDisplay();
+        requestAnimationFrame(mainLoop);
+    </script>
+</body>
+</html>
