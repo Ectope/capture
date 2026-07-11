@@ -1,8 +1,42 @@
 <!DOCTYPE html>
+<!--
+    CAPTURE — Cardiac And Pacing Training Using Realistic Emulation
+    A temporary transvenous pacing simulator for ICU/CCU training.
+
+    Copyright (c) 2026 Tim Bowles
+    Licensed under CC BY-NC-SA 4.0
+      https://creativecommons.org/licenses/by-nc-sa/4.0/
+    SPDX-License-Identifier: CC-BY-NC-SA-4.0
+
+    Free to use, adapt and share for teaching, with credit, under the same
+    licence. Not for commercial use.
+
+    Source, scenarios and teaching script: https://github.com/Ectope/capture
+
+    ---------------------------------------------------------------------
+    SIMULATION FOR EDUCATION ONLY — NOT FOR GUIDING PATIENT CARE.
+
+    Not a medical device. Not validated for clinical use. Every threshold,
+    interval, safety margin and procedure here is a teaching approximation
+    and must be confirmed against local policy and the manual of the
+    generator actually in use. Where this simulator and local policy
+    disagree, LOCAL POLICY IS RIGHT.
+
+    Designed as an adjunct to experienced clinical instruction, with a
+    supervisor present. Not a standalone teaching aid.
+
+    If you adapt this work you accept responsibility for the clinical
+    accuracy of your adaptation. Please retain this notice.
+    ---------------------------------------------------------------------
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Tim Bowles">
+    <meta name="license" content="CC BY-NC-SA 4.0">
+    <link rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+    <meta name="description" content="CAPTURE — a temporary transvenous pacing simulator for ICU/CCU training. Twelve teaching scenarios. Education only; not for guiding patient care.">
     <title>CAPTURE — Cardiac And Pacing Training Using Realistic Emulation</title>
     <style>
         * {
@@ -759,10 +793,22 @@
     </div>
 
     <footer style="display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 18px auto 0; padding-top: 12px; border-top: 1px solid #333;">
-        <a href="#" id="settingsLink"
-           style="color: #00d4aa; font-size: 0.8rem; letter-spacing: 0.5px; text-decoration: none;">
-            Physiological and pacemaker settings
-        </a>
+        <div>
+            <a href="#" id="settingsLink"
+               style="color: #00d4aa; font-size: 0.8rem; letter-spacing: 0.5px; text-decoration: none;">
+                Physiological and pacemaker settings
+            </a>
+            <p style="margin-top: 6px; color: #777; font-size: 0.7rem; line-height: 1.5;">
+                CAPTURE © 2026 Tim Bowles ·
+                <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+                   target="_blank" rel="noopener noreferrer"
+                   style="color: #999; text-decoration: underline;">CC BY-NC-SA 4.0</a>
+                — free to use, adapt and share for teaching, with credit; not for commercial use.<br>
+                Source and scenarios:
+                <a href="https://github.com/Ectope/capture" target="_blank" rel="noopener noreferrer"
+                   style="color: #999; text-decoration: underline;">github.com/Ectope/capture</a>
+            </p>
+        </div>
         <div style="display: flex; align-items: center; gap: 14px;">
             <div style="text-align: right;">
                 <p style="color: #ccc; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px;">Tim Bowles</p>

@@ -94,6 +94,26 @@ BASE_URL=http://127.0.0.1:5050 node test_pacing_behaviour.js
 
 Configured for Render.com deployment via `render.yaml`.
 
-## License
+## Licence
 
-Educational use.
+[![Licence: CC BY-NC-SA 4.0](https://img.shields.io/badge/Licence-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
+CAPTURE © 2026 Tim Bowles, licensed under
+[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+**Please use it.** Copy it, run it on your unit, write your own scenarios, retune
+the values to match your own generator, translate it. Three conditions:
+
+- **Credit** — attribute it to Tim Bowles and link to the licence, and say if you
+  changed anything.
+- **Non-commercial** — teaching your own staff, running departmental or regional
+  training, and using it in university courses are **not** commercial uses. Selling
+  it, paywalling it, or bundling it into a commercial training product are.
+- **ShareAlike** — if you build on it, release your version under the same licence,
+  so improvements stay open.
+
+If you adapt it, you take on responsibility for the clinical accuracy of your
+adaptation, and you must not represent it as validated for clinical use. Please
+keep the safety disclaimer.
+
+See [LICENSE](LICENSE) for the full terms.

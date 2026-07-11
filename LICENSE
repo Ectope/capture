@@ -1,0 +1,82 @@
+CAPTURE — Cardiac And Pacing Training Using Realistic Emulation
+Copyright (c) 2026 Tim Bowles
+
+This work is licensed under the
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+License (CC BY-NC-SA 4.0).
+
+Full legal code:  https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+Summary:          https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+SPDX-License-Identifier: CC-BY-NC-SA-4.0
+
+
+YOU ARE FREE TO
+------------------------------------------------------------------------
+
+  Share    Copy and redistribute the material in any medium or format.
+
+  Adapt    Remix, transform, and build upon the material — including
+           writing your own scenarios, retuning the values to match your
+           own generator, or translating it.
+
+The licensor cannot revoke these freedoms as long as you follow the
+licence terms.
+
+
+UNDER THE FOLLOWING TERMS
+------------------------------------------------------------------------
+
+  Attribution     You must give appropriate credit to Tim Bowles, provide
+  (BY)            a link to this licence, and indicate if changes were
+                  made. You may do so in any reasonable manner, but not in
+                  any way that suggests the licensor endorses you or your
+                  use.
+
+  NonCommercial   You may not use the material for commercial purposes.
+  (NC)            Teaching your own staff, running departmental or
+                  regional training, and using it in university or college
+                  courses are NOT commercial purposes. Selling it, putting
+                  it behind a paywall, or bundling it into a commercial
+                  training product ARE.
+
+  ShareAlike      If you remix, transform, or build upon the material, you
+  (SA)            must distribute your contributions under the same
+                  licence as the original. Improvements stay open.
+
+  No additional restrictions — you may not apply legal terms or
+  technological measures that legally restrict others from doing anything
+  the licence permits.
+
+
+NOTICES
+------------------------------------------------------------------------
+
+No warranties are given. The licence may not give you all of the
+permissions necessary for your intended use. For example, other rights
+such as publicity, privacy, or moral rights may limit how you use the
+material.
+
+THE SOFTWARE AND MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED.
+
+
+A SPECIFIC AND IMPORTANT DISCLAIMER
+------------------------------------------------------------------------
+
+This is a SIMULATION BUILT FOR EDUCATION. It is not a medical device, it
+is not validated for clinical use, and it must not be used to guide the
+care of a real patient.
+
+Every threshold, interval, safety margin and procedure it contains is a
+teaching approximation and must be confirmed against local policy and the
+manual of the generator actually in use. Where this simulator and local
+policy disagree, LOCAL POLICY IS RIGHT.
+
+It is designed as an adjunct to experienced clinical instruction, with a
+supervisor present who can correct it. It is not a standalone teaching
+aid.
+
+If you adapt this work, you accept responsibility for the clinical
+accuracy of your adaptation, and you must not represent it as validated
+for clinical use. Please retain this disclaimer.
