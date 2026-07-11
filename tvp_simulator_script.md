@@ -4,7 +4,7 @@
 **Device model:** Generic dual-chamber external pulse generator (device-agnostic; controls described generically)
 **Dual purpose:** (1) structured teaching script, (2) validation checklist to confirm simulator capabilities
 
-> **⚠️ For education only — not for guiding patient care.** Every value, threshold, safety margin and procedure in this script is a teaching approximation and must be confirmed against local policy and the manual of the generator actually in use. Where this script and local policy disagree, local policy is right. Designed as an adjunct to experienced clinical instruction with a supervisor present — not as a standalone teaching aid.
+> **⚠️ For education only — not for guiding patient care.** Every value, threshold, safety margin and procedure in this script is a teaching approximation and must be confirmed against local policy and the manual of the generator actually in use. Where this script and local policy disagree, local policy is right. It is a teaching aid, designed as an adjunct to experienced clinical instruction with a supervisor present — not a substitute for it.
 
 ---
 

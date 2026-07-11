@@ -1,0 +1,81 @@
+CAPTURE — Cardiac And Pacing Training Using Realistic Emulation
+A temporary transvenous pacing simulator for ICU/CCU training.
+
+Copyright (c) 2026 Tim Bowles
+
+Licensed under the Creative Commons
+Attribution-NonCommercial-ShareAlike 4.0 International Licence
+(CC BY-NC-SA 4.0).
+
+  Full legal code:  see LICENSE, or
+                    https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+  Summary:          https://creativecommons.org/licenses/by-nc-sa/4.0/
+  SPDX-License-Identifier: CC-BY-NC-SA-4.0
+
+
+WHAT THIS MEANS IN PRACTICE
+========================================================================
+
+Please use it. Copy it, run it on your unit, write your own scenarios,
+retune the values to match your own generator, translate it. Three
+conditions:
+
+  Attribution     Credit Tim Bowles, link to the licence, and say if you
+  (BY)            changed anything.
+
+  NonCommercial   Teaching your own staff, running departmental or
+  (NC)            regional training, and using it in university or college
+                  courses are NOT commercial uses. Selling it, putting it
+                  behind a paywall, or bundling it into a commercial
+                  training product ARE.
+
+  ShareAlike      If you build on it, release your version under the same
+  (SA)            licence, so improvements stay open.
+
+No warranties are given. The material is provided "as is".
+
+
+SIMULATION FOR EDUCATION ONLY — NOT FOR GUIDING PATIENT CARE
+========================================================================
+
+This is not a medical device. It is not validated for clinical use. It
+must not be used to guide the care of a real patient.
+
+  1. Confirm everything locally. Every threshold, interval, safety margin
+     and procedure in this simulator must be checked against your own
+     unit's policy and the manual of the generator you actually use.
+     Devices differ. Where this simulator and your local policy disagree,
+     YOUR LOCAL POLICY IS RIGHT and this simulator is wrong.
+
+  2. It is an adjunct, not a replacement. It is a teaching aid, and it is
+     meant to be used alongside experienced clinical instruction, with a
+     supervisor in the room who can correct it. It is not a substitute
+     for that instruction, and it is not a substitute for supervised
+     practice on the real device.
+
+  3. The device is generic. It is modelled on a typical dual-chamber
+     external pulse generator, not on any particular manufacturer's box.
+     Control layout, ranges, defaults and indicator behaviour vary. Some
+     scenarios depend on features a given generator may or may not have —
+     Scenario 10 (cross-talk), for instance, assumes the box has no
+     ventricular safety pacing, which many temporary units indeed lack
+     but some do not.
+
+  4. The physiology is simplified. It simulates at the level of cardiac
+     timing and events, which is the level at which pacemaker behaviour
+     operates and the level that matters for teaching. It is not a
+     cellular or biophysical model, and the waveform shapes are stylised.
+
+  5. Clinical decisions are not modelled. The simulator can tell you what
+     a box does. It cannot tell you what a patient needs.
+
+If you adapt this work, you accept responsibility for the clinical
+accuracy of your adaptation, and you must not represent it as validated
+for clinical use. Please retain this notice.
+
+
+Source, scenarios and teaching script:
+  https://github.com/Ectope/capture
+
+Feedback, bugs or errors:
+  tim.bowles+CAPTURE@gmail.com

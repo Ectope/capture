@@ -13,9 +13,10 @@ A temporary transvenous pacing simulator for ICU/CCU medical and nursing staff.
 >   procedure here is a teaching approximation. Check it against your own unit's
 >   policy and the manual of the generator you actually use. Devices differ. Where
 >   this simulator and your local policy disagree, **your local policy is right.**
-> - **It is an adjunct, not a replacement.** It is designed to be used alongside
->   experienced clinical instruction, with a supervisor in the room who can correct
->   it. It is not a standalone teaching aid.
+> - **It is an adjunct, not a replacement.** It is a teaching aid, meant to be used
+>   alongside experienced clinical instruction, with a supervisor in the room who can
+>   correct it. It is not a substitute for that instruction, nor for supervised
+>   practice on the real device.
 > - **The device is generic**, modelled on a typical dual-chamber external pulse
 >   generator rather than any particular manufacturer's. Some scenarios depend on
 >   features a given box may not have — Scenario 10 (cross-talk) assumes no
@@ -116,4 +117,5 @@ If you adapt it, you take on responsibility for the clinical accuracy of your
 adaptation, and you must not represent it as validated for clinical use. Please
 keep the safety disclaimer.
 
-See [LICENSE](LICENSE) for the full terms.
+[LICENSE](LICENSE) is the full legal code; [NOTICE](NOTICE) is the plain-English
+summary and the clinical disclaimer.
