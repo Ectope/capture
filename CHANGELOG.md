@@ -4,6 +4,55 @@ All changes below are to `index.html` (the file Flask serves) unless noted.
 
 ---
 
+# 2026-07-12 — Scenario 1b rewritten: overdrive suppression
+
+Scenario 1b was honest about *dependence* but dishonest about *why it matters*. It
+modelled the dependent patient as simply having no escape focus, so inhibiting
+produced flat asystole. That teaches the wrong fear.
+
+The rewrite models what actually happens.
+
+## Physiology: overdrive suppression
+- **`escape.overdriveSuppression`** — an escape focus that has been overdriven by
+  chronic pacing does not switch on the moment you stop pacing. Its automaticity
+  is suppressed, so the first escape beat comes **late** (~15–20 s), the beats
+  after it come **very slowly** (a few per minute), and the focus takes a minute
+  or two to wake up towards its own rate. Recovery begins the instant the
+  overdrive stops; every non-escape beat re-suppresses it. A chronically paced
+  patient therefore *arrives* with the focus already fully suppressed — which is
+  the state the trainee inherits, and the reason the pause looks how it does.
+- Tunable per focus (`suppressionFactor`, `suppressionRecovery`) and **opt-in**, so
+  Scenario 1's prompt, stable junctional escape at 45 is unchanged — which is
+  exactly the contrast the pair of scenarios exists to draw.
+
+## Device: a PAUSE key
+The rate dial floors at 30/min, so a suppressed 18/min escape could never have
+been revealed by down-rating — the manoeuvre the scenario asks for was literally
+impossible on this box. Added a **hold-to-inhibit PAUSE key**: output is withheld
+while held, sensing continues, and releasing restores pacing on the next cycle.
+
+Deliberately a *hold*, not a toggle. Letting go — or moving the pointer off it, or
+the window losing focus — restores pacing, so a trainee cannot accidentally leave
+a dependent patient inhibited. The mode badge reads PAUSED while held.
+
+## The teaching point that changed
+The old scenario implied the danger is *"the box might not restart."* It isn't. On
+a working generator with a seated lead, recapture is essentially immediate, every
+time. The real phenomenon is that **the pause is longer and uglier than the
+patient's true underlying rhythm, and it ends the moment you pace again** — so the
+two errors to catch are *panicking at the pause* and *waiting it out*. Genuine
+failure to recapture is exit block (hyperkalaemia, acidosis, ischaemia, drugs),
+and that pathology would have surfaced regardless of the test.
+
+Dependence still dictates how hard you push everything downstream — just for an
+honest reason.
+
+`tvp_simulator_script.md` updated to match. Suite now 113 checks, all passing;
+the new ones assert the pause length, the slowness of what emerges, the recovery
+towards ~18/min if left inhibited, and immediate recapture on release.
+
+---
+
 # 2026-07-11 — Teaching mode (Phase 3: Tier 3 scenarios) — script complete
 
 Adds scenarios 9–12. **Every scenario in `tvp_simulator_script.md` is now

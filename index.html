@@ -223,6 +223,32 @@
             background: #00ff00;
         }
 
+        /* Hold-to-inhibit. Deliberately looks like something you should not lean
+           on: you have to keep holding it, and letting go restores pacing. */
+        .pause-btn {
+            width: 100%;
+            margin-bottom: 14px;
+            padding: 10px;
+            border: 1px solid #6a5a2a;
+            border-radius: 8px;
+            background: #2a2618;
+            color: #ffaa00;
+            font-family: inherit;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+            touch-action: none;
+        }
+        .pause-btn:hover { background: #35301c; }
+        .pause-btn.held {
+            background: #cc0000;
+            border-color: #ff4444;
+            color: #fff;
+            box-shadow: 0 0 16px rgba(255, 68, 68, 0.5);
+        }
+
         .control-group {
             margin-bottom: 12px;
         }
@@ -570,6 +596,13 @@
                 </div>
             </div>
 
+            <!-- Hold to inhibit the output. The only way to look beneath a paced
+                 rhythm for an escape slower than the 30/min rate floor. -->
+            <button class="pause-btn" id="pauseBtn"
+                    title="Hold to inhibit pacing output. Sensing continues. Release to resume.">
+                ⏸ Pause — hold to inhibit
+            </button>
+
             <div class="control-group">
                 <label>Rate</label>
                 <input type="range" id="rate" min="30" max="180" value="80">
@@ -809,6 +842,27 @@ ventricle first:
   none           no escape at all - the patient is PACING DEPENDENT, and
                  loss of capture leaves asystole
 
+OVERDRIVE SUPPRESSION (optional, per escape focus). An escape focus that
+has been overdriven by chronic pacing does not simply switch on the moment
+you stop pacing. Its automaticity is suppressed, so:
+
+  - the FIRST escape beat comes late (~15-20 s at full suppression),
+  - the beats after it come very slowly (a few per minute), and
+  - the focus takes a minute or two to wake up towards its own rate.
+
+Recovery starts the moment the overdrive stops, and every non-escape beat
+re-suppresses it. A chronically paced patient therefore arrives with the
+focus ALREADY fully suppressed - which is the state the trainee inherits.
+
+This matters enormously and is widely misunderstood. The pause you see on
+inhibiting a paced patient is LONGER AND UGLIER than their true underlying
+rhythm, and it ends the instant you pace again. The clinical lesson is to
+neither panic at the pause nor sit and wait it out: restore, and move on.
+The failure mode people fear - not being able to restart - is not this. On
+a working generator with a seated lead, recapture is essentially immediate,
+every time. Genuine failure to recapture is EXIT BLOCK (hyperkalaemia,
+acidosis, ischaemia, drugs), and that pathology would have surfaced anyway.
+
 Patient capture and sensing truth (sandbox defaults; scenarios override
 these, and may change them during a scenario):
 
@@ -971,6 +1025,17 @@ Atrial sensitivity 0.5 - 20 mV        2.0 mV
 Vent. sensitivity  0.5 - 20 mV        2.0 mV
 Mode               DDD, demoted to AAI / VVI / OFF via the lead switches
 Async switch       off / on           off
+Pause key          hold to inhibit    (momentary)
+
+The PAUSE key withholds the pacing output while it is held, while the box
+goes on SENSING (the sense indicators keep flashing). It is the proper way
+to look for an underlying rhythm, and on this device it is the ONLY way to
+find an escape slower than 30/min, because that is where the rate dial
+floors. Releasing it restores pacing on the very next cycle.
+
+It is deliberately a hold rather than a toggle: you cannot walk away from
+it, and letting go - or even moving the mouse off it - restores pacing. A
+trainee cannot accidentally leave a dependent patient inhibited.
 
 The ASYNC switch converts the demand mode to its asynchronous cousin -
 DDD becomes DOO, VVI becomes VOO, AAI becomes AOO. The box stops
@@ -1087,6 +1152,12 @@ plausible values rather than device-verified numbers.
             // always captures -- that is the point of it.
             tcpRate: 60,
 
+            // How much each overdriven beat re-suppresses a suppressible escape
+            // focus. Pinned near full suppression within a few seconds of pacing,
+            // which is why a chronically paced patient's escape is always
+            // suppressed by the time you come to test them.
+            overdriveSuppressionPerBeat: 0.08,
+
             // Refractory / blanking windows (ms). PVARP is operator-programmable
             // (state.pvarp): it is the window after a ventricular event in which
             // the atrial channel is deaf, and therefore the setting that decides
@@ -1117,6 +1188,7 @@ plausible values rather than device-verified numbers.
             atrialLead: true,
             ventLead: true,
             async: false,      // ASYNC switch: DDD->DOO, VVI->VOO, AAI->AOO
+            paused: false,     // PAUSE key held: output inhibited, sensing continues
             rate: 80,
             upperRate: 160,    // ceiling on TRACKED ventricular pacing in DDD
             pvarp: 300,        // post-ventricular atrial refractory period (ms)
@@ -1256,6 +1328,20 @@ plausible values rather than device-verified numbers.
         let lastEctopyTime = -100000;         // last isolated ectopic
         let nextEctopicTime = 0;              // next beat of a run in progress
         let ectopyBurstLeft = 0;              // beats remaining in the current run
+
+        // ---- Overdrive suppression ----
+        // 0 = the escape focus is fully rested. 1 = fully suppressed.
+        //
+        // An escape focus that has been overdriven by pacing does not simply
+        // switch on the moment you stop pacing. Its automaticity has been
+        // suppressed, so the first escape beat comes LATE and the ones after it
+        // come SLOWLY, and the focus takes a minute or two to wake up to its own
+        // intrinsic rate. Recovery begins the moment the overdrive stops.
+        //
+        // This is the single most clinically important thing about inhibiting a
+        // chronically paced patient, and it is why the pause you see is longer
+        // and uglier than the patient's true underlying rhythm.
+        let escapeSuppression = 0;
 
         // ---- Device timing state ----
         let escapeRef = 0;         // last ventricular event (anchors LRI / AEI)
@@ -1399,6 +1485,20 @@ plausible values rather than device-verified numbers.
             return 60000 / Math.max(1, state.rate);
         }
 
+        // The escape focus's CURRENT interval, which is not its intrinsic one if
+        // it has been overdriven. At full suppression the interval is stretched by
+        // `suppressionFactor`, and it shortens back towards the intrinsic rate as
+        // the focus recovers -- so the beats come late, then slowly, then settle.
+        // A focus with no `overdriveSuppression` behaves as before: it simply
+        // fires at its own rate the moment nothing else has beaten it to it.
+        function getEscapeInterval() {
+            const escape = patient.escape;
+            const intrinsic = 60000 / escape.rate;
+            if (!escape.overdriveSuppression) return intrinsic;
+            const factor = (escape.suppressionFactor !== undefined) ? escape.suppressionFactor : 5;
+            return intrinsic * (1 + factor * escapeSuppression);
+        }
+
         function addEcgEvent(type, time, extra) {
             ecgEvents.push(Object.assign({ type, time }, extra || {}));
             ecgEvents = ecgEvents.filter(e => e.time > simTime - EVENT_RETENTION);
@@ -1537,6 +1637,14 @@ plausible values rather than device-verified numbers.
             if (mechanical) {
                 lastVentActivation = now;
                 recordVentEvent(now);
+
+                // Any beat that is NOT the escape focus's own is an overdriven
+                // beat, and re-suppresses it. (The focus firing does not suppress
+                // itself -- that is how it recovers.)
+                if (source !== 'escape' && patient.escape && patient.escape.overdriveSuppression) {
+                    escapeSuppression = Math.min(1,
+                        escapeSuppression + CONFIG.overdriveSuppressionPerBeat);
+                }
 
                 // Retrograde (ventriculo-atrial) conduction. Any real ventricular
                 // depolarisation -- paced or not -- may conduct backwards up the
@@ -1759,8 +1867,15 @@ plausible values rather than device-verified numbers.
             //    differ only in QRS morphology. A patient with escape === null
             //    is pacing dependent: lose capture and there is nothing behind it.
             if (rhythm.escape && rhythm.escape.rate > 0) {
-                const escapeInterval = 60000 / rhythm.escape.rate;
-                if (now - lastVentActivation >= escapeInterval) {
+                // The focus recovers from overdrive continuously, from the moment
+                // the overdrive stops. Nothing needs to "notice" that pacing has
+                // ceased -- recovery is simply what happens when it is not being
+                // re-suppressed beat by beat.
+                if (rhythm.escape.overdriveSuppression) {
+                    const recovery = rhythm.escape.suppressionRecovery || 90000;
+                    escapeSuppression = Math.max(0, escapeSuppression - DT / recovery);
+                }
+                if (now - lastVentActivation >= getEscapeInterval()) {
                     activateVentricle(now, 'escape', rhythm.escape.focus);
                 }
             }
@@ -1788,7 +1903,12 @@ plausible values rather than device-verified numbers.
             //    not to touch the output.
             tickNoise(now, mode);
 
-            if (mode === 'OFF') return;
+            // The PAUSE key withholds pacing output while it is held, but the box
+            // goes on sensing and the sense indicators go on flashing. This is the
+            // proper way to look for an underlying rhythm: the rate dial floors at
+            // 30, so winding it down cannot reveal an escape slower than that.
+            // Releasing the key restores pacing on the very next cycle.
+            if (mode === 'OFF' || state.paused) return;
 
             // 5. Device pacing decisions.
             const LRI = getLRI();
@@ -2097,7 +2217,10 @@ plausible values rather than device-verified numbers.
         function updateDisplay() {
             const mode = getMode();
             const now = simTime;
-            document.getElementById('modeBadge').textContent = mode;
+            const badge = document.getElementById('modeBadge');
+            badge.textContent = state.paused ? 'PAUSED' : mode;
+            badge.style.background = state.paused ? '#ffaa00' : '';
+            badge.style.color = state.paused ? '#1a1a2a' : '';
             document.getElementById('rateValue').textContent = state.rate;
             document.getElementById('upperRateValue').textContent = state.upperRate;
             document.getElementById('avIntervalValue').textContent = state.avInterval;
@@ -2207,6 +2330,22 @@ plausible values rather than device-verified numbers.
             updateDisplay();
         });
 
+        // PAUSE is a hold, not a toggle. You cannot walk away from it, and letting
+        // go -- or moving the pointer off it, or the window losing focus -- restores
+        // pacing immediately. A trainee cannot accidentally leave a dependent
+        // patient inhibited, which is exactly how the real key behaves.
+        const pauseButton = document.getElementById('pauseBtn');
+        function setPaused(held) {
+            if (state.paused === held) return;
+            state.paused = held;
+            pauseButton.classList.toggle('held', held);
+            updateDisplay();
+        }
+        pauseButton.addEventListener('pointerdown', e => { e.preventDefault(); setPaused(true); });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(evt =>
+            pauseButton.addEventListener(evt, () => setPaused(false)));
+        window.addEventListener('blur', () => setPaused(false));
+
         document.getElementById('rate').addEventListener('input', e => {
             state.rate = parseInt(e.target.value, 10);
             updateDisplay();
@@ -2286,14 +2425,18 @@ plausible values rather than device-verified numbers.
                 debrief: `<h4>What should have happened</h4>
                     <ul>
                       <li>Every beat paced at 70 on arrival.</li>
-                      <li><b>Gradually</b> down-rate while watching the ECG and the arterial trace.</li>
-                      <li>Below 45 the box stops pacing and a narrow junctional escape at 45 appears — the heart rate stops following the dial. That is the answer.</li>
-                      <li>Restore the rate promptly. Conclusion: <i>not dependent, stable escape at 45, safe to threshold test.</i></li>
+                      <li>Either <b>gradually down-rate</b>, or <b>hold PAUSE</b> to inhibit the output — both work here, and both must be done while watching the ECG <i>and</i> the arterial trace.</li>
+                      <li>A narrow junctional escape at 45 appears, promptly and stably. The heart rate stops following the dial. That is the answer.</li>
+                      <li>Restore promptly. Conclusion: <i>not dependent, stable escape at 45, safe to threshold test.</i></li>
+                    </ul>
+                    <h4>Note the escape came straight away</h4>
+                    <ul>
+                      <li>It appeared on the next beat and at a sensible rate. Hold that observation — in Scenario 1b the identical manoeuvre produces something very different, and the difference is the lesson.</li>
                     </ul>
                     <h4>Common errors</h4>
                     <ul>
-                      <li>Switching the box off instead of down-rating.</li>
-                      <li>Not watching the arterial trace while down-rating.</li>
+                      <li>Switching the box off, or pulling a lead, instead of down-rating or using PAUSE.</li>
+                      <li>Not watching the arterial trace.</li>
                       <li>Forgetting to restore the settings.</li>
                     </ul>
                     <h4>Pearl</h4>
@@ -2306,35 +2449,53 @@ plausible values rather than device-verified numbers.
                 tier: 1,
                 name: '1b — The dependent patient',
                 objectives: [
-                    'Recognise pacing dependence and stop',
-                    'Say what backup is needed before any threshold test'
+                    'Recognise pacing dependence, name it, and restore promptly',
+                    'Say the backup sentence out loud before testing anything'
                 ],
-                vignette: 'Same routine check, different patient.',
-                // Identical drill, opposite result: no escape focus at all.
-                // Down-rating never reveals an intrinsic beat -- the heart rate
-                // simply follows the dial down and the blood pressure falls.
+                vignette: 'Same check, different patient.',
+                // Same drill, opposite patient. Run it straight after Scenario 1 so
+                // the contrast lands.
+                //
+                // The escape focus is there, but it has been OVERDRIVEN by chronic
+                // pacing and is suppressed. Inhibit the box and nothing happens for
+                // a long time -- the first escape beat arrives around 15-20 s late,
+                // and what emerges is slow (well under 20/min) and takes a minute or
+                // two to settle towards its own rate. The pause is a property of the
+                // suppression, not of the patient's true underlying rhythm, and it
+                // ends the instant you pace again.
                 deviceSetup:  { mode: 'VVI', rate: 70, vOutput: 5, vSensing: 2 },
                 patientSetup: {
                     atrialRate: 0, avConduction: true, prInterval: 160, conductionRatio: 1,
-                    escape: null,
+                    escape: {
+                        focus: 'ventricular',
+                        rate: 18,                    // its rate once it has woken up
+                        overdriveSuppression: true,
+                        suppressionFactor: 5,        // ~20 s interval when fully suppressed
+                        suppressionRecovery: 90000   // and a couple of minutes to settle
+                    },
                     vThreshold: 3, vAmplitude: 8
                 },
                 timeline: [],
-                debrief: `<h4>What should have happened</h4>
+                debrief: `<h4>What good looks like</h4>
                     <ul>
-                      <li>Down-rating cautiously: the rate follows the dial <b>all the way down</b> and no intrinsic beat ever appears. Every beat is still paced at 30 and the arterial pressure falls.</li>
-                      <li>That is the finding — there is nothing underneath. Restore the rate immediately.</li>
-                      <li>Declare: <i>pacing dependent. Do not threshold test without transcutaneous backup and a senior present.</i></li>
+                      <li>They wind down — and find the rate dial floors at 30, which tells them nothing. To look underneath they must <b>hold PAUSE</b> and inhibit the output.</li>
+                      <li>They see the pause. They recognise the patient is <b>dependent</b>, and they <b>restore pacing promptly</b> rather than sitting on a pause waiting to see what turns up.</li>
+                      <li>They name it: <i>dependent — escape suppressed and slow.</i></li>
+                      <li>Then the backup sentence, out loud: <i>"If I'm going to test thresholds here, I want pads on, drugs available, and a senior aware, in case something else fails while I'm in the middle of it."</i></li>
                     </ul>
-                    <h4>Common errors</h4>
+                    <h4>Where they trip — two opposite errors, both worth catching</h4>
                     <ul>
-                      <li>Pushing on "to see the underlying rhythm" — there isn't one, and you are simply making the patient more bradycardic.</li>
-                      <li>Disconnecting the lead to "check" — that is an asystolic arrest, not a test.</li>
-                      <li>No pads, no drugs, no plan verbalised.</li>
+                      <li><b>Panicking</b> at a 10–20 second pause and calling an arrest, when all they had to do was let go of the button.</li>
+                      <li><b>The reverse:</b> leaving it inhibited far too long "to see the underlying rhythm", while the escape is still suppressed and there is nothing to see.</li>
                     </ul>
+                    <h4>Debrief — and this is the point of the whole scenario</h4>
+                    <p style="margin-bottom:8px;">The point is <b>not</b> that you might fail to restart pacing. On a working generator with a seated lead, winding the output back up recaptures instantly, essentially every time.</p>
+                    <p style="margin-bottom:8px;">What actually happens is <b>overdrive suppression</b>. Chronic pacing suppresses the escape focus, so when you inhibit, the escape appears <i>late</i> and <i>slow</i>, sometimes taking a couple of minutes to settle. <b>The pause you see is longer than the patient's true underlying rhythm, and it ends the moment you pace again.</b> So don't overreact to the pause — and don't wait it out either. Restore, and move on.</p>
+                    <p style="margin-bottom:8px;">Genuine failure to recapture does happen. But it is <b>exit block</b> — from hyperkalaemia, acidosis, ischaemia or drugs — and that pathology would have surfaced regardless of your test. It was not caused by the test.</p>
+                    <p>Dependence still dictates how hard you push everything that follows, which is why Scenario 1 comes first. Just for a more honest reason than "the box might not restart."</p>
                     <h4>Pearl</h4>
                     <ul>
-                      <li>In dependent patients threshold testing carries real risk: pads on, drugs available, senior aware. This is why Scenario 1 precedes everything. [1,4]</li>
+                      <li>Contrast with Scenario 1: the same manoeuvre on that patient produced a prompt, stable junctional escape at 45. Here it produces a long pause and an agonal rhythm. Same drill, opposite patient — and the difference dictates the entire safety posture from here on. [1,4]</li>
                     </ul>`
             },
             {
@@ -2928,6 +3089,11 @@ plausible values rather than device-verified numbers.
             nextEctopicTime = 0;
             ectopyBurstLeft = 0;
 
+            // A patient who has been paced for days arrives with their escape focus
+            // ALREADY fully suppressed. That is the state the trainee inherits, and
+            // it is the whole reason the pause looks the way it does.
+            escapeSuppression = (patient.escape && patient.escape.overdriveSuppression) ? 1 : 0;
+
             // Identical seed every time: a scenario that looks irregular but
             // replays exactly, so it can be validated and fairly assessed.
             seedRng(0x5eed1234);
@@ -2958,9 +3124,10 @@ plausible values rather than device-verified numbers.
         // through which leads are connected, so translate.
         function applyDeviceSetup(setup) {
             if (!setup) return;
-            // Every scenario hands the trainee a box in demand mode unless it
-            // explicitly says otherwise.
+            // Every scenario hands the trainee a box in demand mode, pacing,
+            // unless it explicitly says otherwise.
             state.async = !!setup.async;
+            state.paused = false;
             switch (setup.mode) {
                 case 'DDD': state.mode = 'DDD'; state.atrialLead = true;  state.ventLead = true;  break;
                 case 'VVI': state.mode = 'DDD'; state.atrialLead = false; state.ventLead = true;  break;

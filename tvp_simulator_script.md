@@ -116,35 +116,43 @@ So "turning sensitivity down" is ambiguous and banned as a phrase on the unit. T
 
 ---
 
-## Scenario 1b — The dependent patient (same drill, opposite result)
+## Scenario 1b — The dependent patient
 
-**Objectives**
-- Recognise pacing dependence and STOP
-- Understand why threshold testing on a dependent patient needs backup ready
+Same drill, opposite patient. Run it straight after 1 so the contrast lands.
 
 **Simulator setup**
-- Mode VVI, rate 70, capturing
-- Underlying rhythm on reveal: **asystole / agonal <20 bpm**
+- VVI, rate 70, capturing
+- When they inhibit, there's a **long pause** before any escape appears, and what emerges is **slow (sub-20) and late**
+- Model **overdrive suppression**, so the escape shows up on its own timeline rather than immediately
+- *Requires a PAUSE / inhibit control: the rate dial floors at 30, so down-rating alone cannot reveal an escape this slow.*
 
 **Vignette**
-> "Same routine check, different patient."
+> "Same check, different patient."
 
-**Correct actions**
-- Begin down-rating cautiously
-- Recognise capture loss with **no adequate escape** → immediately restore rate
-- Declare: "Pacing dependent. Do not threshold test without transcutaneous backup and senior present."
+**What good looks like**
+
+They wind down, see the pause, recognise the patient is dependent, and **restore the rate promptly** rather than sitting on a pause waiting to see what turns up. They name it: *dependent, escape suppressed and slow.* Then the backup sentence out loud: *if I'm going to test thresholds here, I want pads on, drugs available, and a senior aware, in case something else fails while I'm in the middle of it.*
+
+**Where they trip** — two opposite errors, and both are worth catching:
+- **Panicking** at a 10–20 second pause and calling an arrest, when all they need to do is turn the box back up
+- Or the reverse: leaving it inhibited too long *"to see the underlying rhythm"* while the escape is still suppressed
 
 **Expected simulator behaviour (✓)**
-- ✓ Down-rating produces profound bradycardia/asystole and haemodynamic drop
-- ✓ Restoring rate rescues immediately
+- ✓ Escape focus arrives **already fully suppressed** (a chronically paced patient)
+- ✓ Down-rating to the 30/min floor reveals nothing
+- ✓ Holding PAUSE gives a pause of ~15–20 s before the first escape beat
+- ✓ What emerges is slow (a few per minute) and takes a minute or two to settle towards ~18
+- ✓ Releasing PAUSE **recaptures immediately**
 
-**Common errors**
-- Pushing on to full asystole "to see the underlying rhythm"
-- Not having pads/backup plan verbalised
+**Debrief**
 
-**Debrief pearls**
-- In dependent patients, threshold testing carries real risk. Have transcutaneous pacing pads on, drugs available, senior aware. [1,4]
-- This is why Scenario 1 precedes everything: **dependence dictates how aggressively you may test.**
+The point of this scenario is **not** that you might fail to restart pacing. On a working generator with a seated lead, winding the output back up recaptures instantly, essentially every time.
+
+What actually happens is **overdrive suppression**: chronic pacing suppresses the escape focus, so when you inhibit, the escape appears late and slow, sometimes taking a couple of minutes to settle. **The pause you see is longer than the patient's true underlying rhythm, and it ends the moment you pace again.** So don't overreact to the pause, and don't wait it out either. Just restore and move on.
+
+Genuine failure to recapture does happen, but it is **exit block** from hyperkalaemia, acidosis, ischaemia or drugs — and that pathology would have surfaced regardless of your test.
+
+Dependence still dictates how hard you push everything that follows, which is why Scenario 1 comes first — just for a more honest reason than *"the box might not restart."*
 
 ---
 

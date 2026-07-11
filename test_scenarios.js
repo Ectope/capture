@@ -41,6 +41,7 @@ const SRC = blocks[blocks.length - 1] + `
   get lastVentPaceTime()  { return lastVentPaceTime; },
   get SCENARIOS()         { return SCENARIOS; },
   get ecgEvents()         { return ecgEvents; },
+  get escapeSuppression() { return escapeSuppression; },
   get EVENT_RETENTION()   { return EVENT_RETENTION; },
   get BUFFER_LENGTH()     { return BUFFER_LENGTH; },
   get DT()                { return DT; },
@@ -133,26 +134,81 @@ check('Restoring the rate resumes 1:1 capture immediately',
   near(perMin('vent_capture'), 66, 74));
 
 // =====================================================================
-console.log('\nScenario 1b — The dependent patient  (no escape focus)');
+console.log('\nScenario 1b — The dependent patient  (escape overdrive-suppressed)');
 sandbox.startScenario('sc1b');
+check('The escape focus arrives fully suppressed (a chronically paced patient)',
+  S.escapeSuppression === 1, `suppression ${S.escapeSuppression}`);
 observe();
 check('Every beat paced at 70, capturing', near(perMin('vent_capture'), 66, 74));
+check('Ongoing pacing holds the focus suppressed',
+  S.escapeSuppression > 0.97, `suppression ${S.escapeSuppression.toFixed(3)}`);
 
+// Winding the rate down cannot answer the question: the dial floors at 30, and
+// the suppressed escape is far slower than that.
 S.state.rate = 30;
 observe();
-check('Down-rating never reveals an intrinsic beat — patient is dependent',
-  count('native_qrs') === 0 && count('native_qrs_escape') === 0);
-check('Rate follows the dial all the way down: profound bradycardia',
-  near(sandbox.getMeasuredHR(), 28, 32), `HR ${sandbox.getMeasuredHR()}`);
-
-S.state.ventLead = false;                           // the error: disconnect the box
-run(4000); log = []; run(4000);
-check('Disconnecting the lead produces asystole (haemodynamic collapse)',
-  count('vent_capture') === 0 && count('native_qrs') === 0);
-S.state.ventLead = true;
+check('Down-rating to the 30/min floor reveals nothing — the box just paces at 30',
+  count('native_qrs_escape') === 0 && near(sandbox.getMeasuredHR(), 28, 32),
+  `HR ${sandbox.getMeasuredHR()}`);
 S.state.rate = 70;
+run(10000);                                         // re-suppress fully
+
+// The proper manoeuvre: hold PAUSE and inhibit.
+S.state.paused = true;
+log = [];
+run(10000);
+check('Holding PAUSE: a long pause — nothing at all for the first 10 s',
+  count('vent_capture') === 0 && count('native_qrs_escape') === 0,
+  `${count('vent_capture')} paced, ${count('native_qrs_escape')} escape beats`);
+check('No cardiac output during the pause (the thing that panics people)',
+  sandbox.getMeasuredHR() === 0, `HR ${sandbox.getMeasuredHR()}`);
+
+// Keep holding: the escape does eventually appear, late.
+const pauseStart = S.simTime;
+let firstEscape = null;
+for (let i = 0; i < 3000 && firstEscape === null; i++) {   // up to 30 s more
+  sandbox.simulateTick();
+  const e = S.ecgEvents.filter(x => x.type === 'native_qrs_escape');
+  if (e.length) firstEscape = e[e.length - 1].time;
+}
+const delay = (firstEscape - pauseStart) + 10000;   // total inhibited time
+check('The escape does appear — but LATE (10-25 s after inhibition began)',
+  firstEscape !== null && near(delay, 10000, 25000),
+  `first escape beat ${Math.round(delay / 1000)} s after PAUSE was pressed`);
+
+// And what emerges is slow, and slower than its own intrinsic rate.
+log = [];
+run(30000);
+check('What emerges is SLOW — well under 20/min, and under its own resting rate',
+  perMin('native_qrs_escape', 30000) < 18 && count('native_qrs_escape') > 0,
+  `${perMin('native_qrs_escape', 30000).toFixed(1)}/min (its rested rate is 18)`);
+check('It is still suppressed and only slowly recovering',
+  S.escapeSuppression > 0 && S.escapeSuppression < 1,
+  `suppression ${S.escapeSuppression.toFixed(2)} (1 = fully suppressed)`);
+
+// Release: this is the reassurance the whole debrief turns on.
+S.state.paused = false;
+log = [];
+run(1200);
+check('Releasing PAUSE recaptures IMMEDIATELY — within one cycle',
+  count('vent_capture') > 0,
+  `first paced beat within ${Math.round(1200 / count('vent_capture'))} ms`);
 observe();
-check('Restoring rate rescues immediately', near(perMin('vent_capture'), 66, 74));
+check('...and the patient is straight back to a paced 70',
+  near(sandbox.getMeasuredHR(), 66, 74), `HR ${sandbox.getMeasuredHR()}`);
+
+// If they had waited long enough, the focus wakes up to its true rate.
+sandbox.startScenario('sc1b');
+run(5000);
+S.state.paused = true;
+run(150000);                                        // 2.5 min inhibited
+log = [];
+run(60000);
+check('Left inhibited for minutes, the focus wakes up towards its true rate (~18)',
+  near(perMin('native_qrs_escape', 60000), 15, 19),
+  `${perMin('native_qrs_escape', 60000).toFixed(1)}/min once recovered`);
+check('The pause was a property of the SUPPRESSION, not the underlying rhythm',
+  S.escapeSuppression < 0.1, `suppression now ${S.escapeSuppression.toFixed(2)}`);
 
 // =====================================================================
 console.log('\nScenario 2 — Ventricular capture threshold  (true threshold 1.5 mA)');
