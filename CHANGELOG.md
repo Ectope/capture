@@ -4,6 +4,15 @@ All changes below are to `index.html` (the file Flask serves) unless noted.
 
 ---
 
+# 2026-07-12 (v2026-07-12.5) — Link the teaching guide from the app
+
+The teaching guide (`tvp_simulator_script.md`) was only findable by people
+who know their way around a GitHub repository. It is now linked from the
+top of the Teaching panel ("📖 Teaching guide — full script and marking
+rubrics for these scenarios") and from the footer next to the source link.
+
+---
+
 # 2026-07-12 (v2026-07-12.4) — Scenarios lead with the brief alone
 
 The objectives list no longer prints under the vignette. A printed objective
