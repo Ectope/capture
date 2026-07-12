@@ -4,6 +4,24 @@ All changes below are to `index.html` (the file Flask serves) unless noted.
 
 ---
 
+# 2026-07-12 — Layout compaction and user-testing plumbing
+
+Preparation for putting the simulator in front of testers.
+
+- **Header in one row.** Title and subtitle left-justified, Sandbox/Teaching
+  tabs on the right of the same row; the disclaimer moved to the empty space
+  under the patient monitor (still always visible, still not dismissible).
+  Together this stops the controls scrolling off a laptop screen.
+- **Visible version stamp** (`v2026-07-12`, in the footer) so feedback can be
+  tied to the build the tester actually saw. Bump it on every push.
+- **Feedback email pre-fill.** Clicking the QR now pre-fills the email body
+  with the version, active tab (and scenario, if one is running) and the
+  pacer's dial positions. The QR pattern itself still encodes the bare
+  address, so scanning from a phone is unchanged. Footer caption now reads
+  "Click or scan for feedback, bugs, errors".
+
+---
+
 # 2026-07-12 — Scenario 1b rewritten: overdrive suppression
 
 Scenario 1b was honest about *dependence* but dishonest about *why it matters*. It
