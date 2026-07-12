@@ -4,6 +4,17 @@ All changes below are to `index.html` (the file Flask serves) unless noted.
 
 ---
 
+# 2026-07-12 (v2026-07-12.3) — Freeze key on the monitor
+
+Hold-to-freeze button in the monitor header, following the same
+hold-not-toggle contract as the pacemaker's PAUSE key: holding stills both
+traces so an interval can be measured or a spike pointed at; the patient,
+the pacemaker and the numerics run on underneath, exactly like the freeze
+key on a bedside monitor. Releasing — or leaving the button, or the window
+losing focus — snaps the display back to live.
+
+---
+
 # 2026-07-12 (v2026-07-12.2) — Fix: controls could disagree with the simulation after reload
 
 On reload the browser restores every form control's last value (rhythm menu,

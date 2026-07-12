@@ -358,8 +358,35 @@
         }
         .monitor h2 {
             color: #00ff00;
-            margin-bottom: 15px;
             font-size: 1rem;
+        }
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        /* Freeze key: same hold-not-toggle contract as the pacemaker's PAUSE,
+           styled as monitor chrome rather than device chrome. */
+        .freeze-btn {
+            border: 1px solid #2a5a4a;
+            border-radius: 6px;
+            background: #10241c;
+            color: #00d4aa;
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 6px 14px;
+            cursor: pointer;
+            user-select: none;
+            touch-action: none;
+        }
+        .freeze-btn:hover { background: #17352a; }
+        .freeze-btn.held {
+            background: #00d4aa;
+            color: #0a0a14;
+            border-color: #00d4aa;
         }
         .trace-container {
             margin-bottom: 15px;
@@ -742,7 +769,13 @@
         <!-- Monitor Display -->
         <div class="monitor-column">
         <div class="monitor">
-            <h2>PATIENT MONITOR</h2>
+            <div class="monitor-header">
+                <h2>PATIENT MONITOR</h2>
+                <button class="freeze-btn" id="freezeBtn"
+                        title="Hold to freeze the traces for inspection. The patient, the pacemaker and the numerics run on underneath. Release to resume.">
+                    ⏸ Freeze — hold
+                </button>
+            </div>
 
             <div class="trace-container">
                 <div class="trace-label">ECG Lead II</div>
@@ -814,7 +847,7 @@
                 Physiological and pacemaker settings
             </a>
             <p style="margin-top: 6px; color: #777; font-size: 0.7rem; line-height: 1.5;">
-                CAPTURE <span id="versionStamp">v2026-07-12.2</span> © 2026 Tim Bowles ·
+                CAPTURE <span id="versionStamp">v2026-07-12.3</span> © 2026 Tim Bowles ·
                 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
                    target="_blank" rel="noopener noreferrer"
                    style="color: #999; text-decoration: underline;">CC BY-NC-SA 4.0</a>
@@ -2469,6 +2502,26 @@ care of a real patient.
             pauseButton.addEventListener(evt, () => setPaused(false)));
         window.addEventListener('blur', () => setPaused(false));
 
+        // FREEZE follows the same hold-not-toggle contract as PAUSE, but on the
+        // monitor side: it stills the traces so an interval can be measured or
+        // a spike pointed at, while the patient, the pacemaker and the numerics
+        // run on underneath -- exactly like the freeze key on a bedside monitor.
+        // Releasing (or leaving the button, or losing window focus) snaps the
+        // display back to live.
+        const freezeButton = document.getElementById('freezeBtn');
+        let traceFrozen = false;
+        function setFrozen(held) {
+            if (traceFrozen === held) return;
+            traceFrozen = held;
+            // The label stays put: swapping text would resize the button and
+            // could slide it out from under the pointer, ending the hold.
+            freezeButton.classList.toggle('held', held);
+        }
+        freezeButton.addEventListener('pointerdown', e => { e.preventDefault(); setFrozen(true); });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(evt =>
+            freezeButton.addEventListener(evt, () => setFrozen(false)));
+        window.addEventListener('blur', () => setFrozen(false));
+
         document.getElementById('rate').addEventListener('input', e => {
             state.rate = parseInt(e.target.value, 10);
             updateDisplay();
@@ -3526,7 +3579,9 @@ care of a real patient.
                 tickAccumulator -= DT;
             }
 
-            render();
+            // A frozen display keeps its last painted frame; the simulation
+            // above still ran, so releasing snaps straight back to live.
+            if (!traceFrozen) render();
             updateDisplay();
             requestAnimationFrame(mainLoop);
         }
