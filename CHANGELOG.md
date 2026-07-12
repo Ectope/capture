@@ -4,6 +4,18 @@ All changes below are to `index.html` (the file Flask serves) unless noted.
 
 ---
 
+# 2026-07-12 (v2026-07-12.8) — Search-engine visibility
+
+All visible and legitimate — no hidden text, which search engines penalise.
+Title now carries the terms people actually search ("Temporary Pacemaker
+Simulator | Transvenous Pacing Training"), fuller meta description,
+canonical URL, Open Graph / Twitter share cards, schema.org WebApplication
+structured data, and a visible footer paragraph describing what the
+simulator covers in searchable clinical terms. Repo homepage and topics
+set on GitHub.
+
+---
+
 # 2026-07-12 (v2026-07-12.7) — Scenario 7: rate-dependent blood pressure
 
 New patient substrate `bpRateDependence` ({adequateRate, lowFactor}): a
