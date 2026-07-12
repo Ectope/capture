@@ -814,7 +814,7 @@
                 Physiological and pacemaker settings
             </a>
             <p style="margin-top: 6px; color: #777; font-size: 0.7rem; line-height: 1.5;">
-                CAPTURE <span id="versionStamp">v2026-07-12</span> © 2026 Tim Bowles ·
+                CAPTURE <span id="versionStamp">v2026-07-12.2</span> © 2026 Tim Bowles ·
                 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
                    target="_blank" rel="noopener noreferrer"
                    style="color: #999; text-decoration: underline;">CC BY-NC-SA 4.0</a>
@@ -3241,6 +3241,7 @@ care of a real patient.
             document.getElementById('atrialLead').checked = state.atrialLead;
             document.getElementById('ventLead').checked = state.ventLead;
             document.getElementById('asyncSwitch').checked = state.async;
+            document.getElementById('rhythmSelect').value = state.rhythm;
         }
 
         // A scenario names a mode; in this device the DDD family is expressed
@@ -3551,6 +3552,13 @@ care of a real patient.
         resizeCanvases();
         populateScenarioSelect();
         renderScenarioPanel();
+        // The simulation always boots from `state`'s defaults, but on reload
+        // the browser restores every control's last value, leaving the dials
+        // showing settings the box is not actually using. Push state out to
+        // the controls so the two can never disagree; pageshow catches the
+        // back/forward-cache case, where restoration happens after load.
+        syncControlsToState();
+        window.addEventListener('pageshow', () => { syncControlsToState(); updateDisplay(); });
         updateDisplay();
         requestAnimationFrame(mainLoop);
     </script>

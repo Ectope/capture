@@ -4,6 +4,17 @@ All changes below are to `index.html` (the file Flask serves) unless noted.
 
 ---
 
+# 2026-07-12 (v2026-07-12.2) — Fix: controls could disagree with the simulation after reload
+
+On reload the browser restores every form control's last value (rhythm menu,
+lead checkboxes, sliders), but the simulation always boots from its JS
+defaults — so the menu could say Complete Heart Block while the patient was
+in sinus at 80. `syncControlsToState()` now also covers the rhythm menu and
+runs at boot and on `pageshow`, so the controls always show what the box is
+actually doing.
+
+---
+
 # 2026-07-12 — Layout compaction and user-testing plumbing
 
 Preparation for putting the simulator in front of testers.
