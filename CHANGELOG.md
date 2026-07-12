@@ -4,6 +4,16 @@ All changes below are to `index.html` (the file Flask serves) unless noted.
 
 ---
 
+# 2026-07-12 (v2026-07-12.6) — Add and link the instructor guide
+
+New `tvp_instructor_guide.md`: a simplified instructor-facing version of the
+teaching script, with the simulator setup values and validation checks taken
+out. The in-app links (top of the Teaching panel, and the footer) point at
+it rather than the full simulator script, which stays in the repo for
+development and validation use.
+
+---
+
 # 2026-07-12 (v2026-07-12.5) — Link the teaching guide from the app
 
 The teaching guide (`tvp_simulator_script.md`) was only findable by people
