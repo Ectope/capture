@@ -825,15 +825,19 @@
             <button class="scenario-btn" id="scenarioStart">Start scenario</button>
             <button class="scenario-btn secondary" id="scenarioRestart" style="display: none;">Restart</button>
             <div class="scenario-vignette" id="scenarioVignette" style="display: none;"></div>
-            <ul class="scenario-objectives" id="scenarioObjectives" style="display: none;"></ul>
 
-            <!-- Instructor-only, and collapsed by default. Clinical actions are
-                 deliberately NOT shown to the trainee: a visible button is a cue,
-                 and it hands over the very reasoning we are trying to assess. The
-                 trainee must say "I'd put the pads on" out loud; the instructor
-                 then makes it happen. -->
+            <!-- Instructor-only, and collapsed by default. The objectives and
+                 the clinical actions are deliberately NOT shown to the trainee:
+                 a visible objective or button is a cue, and it hands over the
+                 very reasoning we are trying to assess. The trainee leads from
+                 the brief alone; the instructor voices objectives as needed and
+                 fires actions the trainee asks for out loud. -->
             <a href="#" class="scenario-link" id="actionsToggle" style="display: none;">▸ Instructor controls</a>
-            <div id="scenarioActions" style="display: none;"></div>
+            <div id="instructorPane" style="display: none;">
+                <div class="instructor-note">Objectives — voice these as needed; the trainee sees only the brief.</div>
+                <ul class="scenario-objectives" id="scenarioObjectives"></ul>
+                <div id="scenarioActions"></div>
+            </div>
 
             <a href="#" class="scenario-link" id="debriefToggle" style="display: none;">▸ Reveal debrief (instructor)</a>
             <div class="scenario-debrief" id="scenarioDebrief" style="display: none;"></div>
@@ -847,7 +851,7 @@
                 Physiological and pacemaker settings
             </a>
             <p style="margin-top: 6px; color: #777; font-size: 0.7rem; line-height: 1.5;">
-                CAPTURE <span id="versionStamp">v2026-07-12.3</span> © 2026 Tim Bowles ·
+                CAPTURE <span id="versionStamp">v2026-07-12.4</span> © 2026 Tim Bowles ·
                 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
                    target="_blank" rel="noopener noreferrer"
                    style="color: #999; text-decoration: underline;">CC BY-NC-SA 4.0</a>
@@ -3425,15 +3429,15 @@ care of a real patient.
             const start      = document.getElementById('scenarioStart');
             const actions    = document.getElementById('scenarioActions');
             const actionsToggle = document.getElementById('actionsToggle');
+            const instructorPane = document.getElementById('instructorPane');
 
             if (!activeScenario) {
                 vignette.style.display = 'none';
-                objectives.style.display = 'none';
                 toggle.style.display = 'none';
                 debrief.style.display = 'none';
                 restart.style.display = 'none';
                 actions.innerHTML = '';
-                actions.style.display = 'none';
+                instructorPane.style.display = 'none';
                 actionsToggle.style.display = 'none';
                 start.textContent = 'Start scenario';
                 return;
@@ -3442,9 +3446,11 @@ care of a real patient.
             vignette.textContent = '“' + activeScenario.vignette + '”';
             vignette.style.display = '';
 
+            // Objectives live in the collapsed instructor pane, not the trainee
+            // view: the trainee leads from the brief alone, and a printed
+            // objective is a prompt that answers the question being asked.
             objectives.innerHTML = activeScenario.objectives
                 .map(o => '<li>' + o + '</li>').join('');
-            objectives.style.display = '';
 
             // Clinical actions -- things that are not dials on the box. These are
             // for the INSTRUCTOR, and are collapsed out of sight by default.
@@ -3473,9 +3479,11 @@ care of a real patient.
                     actions.appendChild(button);
                 });
             }
-            actions.style.display = 'none';
+            // The pane always exists now (it holds the objectives even when a
+            // scenario has no clinical actions), so the toggle always shows.
+            instructorPane.style.display = 'none';
             actionsToggle.textContent = '▸ Instructor controls';
-            actionsToggle.style.display = hasActions ? '' : 'none';
+            actionsToggle.style.display = '';
 
             debrief.innerHTML = activeScenario.debrief;
             debrief.style.display = 'none';
@@ -3554,9 +3562,9 @@ care of a real patient.
 
         document.getElementById('actionsToggle').addEventListener('click', e => {
             e.preventDefault();
-            const actions = document.getElementById('scenarioActions');
-            const open = actions.style.display !== 'none';
-            actions.style.display = open ? 'none' : '';
+            const pane = document.getElementById('instructorPane');
+            const open = pane.style.display !== 'none';
+            pane.style.display = open ? 'none' : '';
             e.target.textContent = open
                 ? '▸ Instructor controls'
                 : '▾ Hide instructor controls';

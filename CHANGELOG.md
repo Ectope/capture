@@ -4,6 +4,17 @@ All changes below are to `index.html` (the file Flask serves) unless noted.
 
 ---
 
+# 2026-07-12 (v2026-07-12.4) — Scenarios lead with the brief alone
+
+The objectives list no longer prints under the vignette. A printed objective
+is a prompt that answers the question being asked ("decide whether this
+patient has an adequate underlying rhythm" hands over the whole task). The
+trainee now leads from the brief alone; the objectives moved into the
+collapsed instructor pane — which now always appears, even for scenarios
+with no clinical actions — for the instructor to voice as needed.
+
+---
+
 # 2026-07-12 (v2026-07-12.3) — Freeze key on the monitor
 
 Hold-to-freeze button in the monitor header, following the same
