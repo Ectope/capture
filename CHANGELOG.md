@@ -4,6 +4,24 @@ All changes below are to `index.html` (the file Flask serves) unless noted.
 
 ---
 
+# 2026-07-12 (v2026-07-12.7) — Scenario 7: rate-dependent blood pressure
+
+New patient substrate `bpRateDependence` ({adequateRate, lowFactor}): a
+patient whose cardiac output is rate-dependent. While the measured
+ventricular rate sits below adequateRate the whole arterial waveform (and
+therefore the displayed ABP) sags to lowFactor of normal; the factor drifts
+with a ~5 s time constant so recovery reads as physiology, not a switch.
+A rate-dependent patient arrives at the pressure their current rate
+supports, rather than starting normal and sagging in front of the trainee.
+
+Scenario 7 uses it: hypotensive (~83 systolic) at the escape rate of 40,
+normalising a few beats after an effective 60/min is restored — by either
+fix, correcting the sensitivity or bridging with ASYNC. The haemodynamic
+recovery is the confirmation the fix worked. Vignette and debrief updated,
+and both the simulator script and the instructor guide brought into line.
+
+---
+
 # 2026-07-12 (v2026-07-12.6) — Add and link the instructor guide
 
 New `tvp_instructor_guide.md`: a simplified instructor-facing version of the

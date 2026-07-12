@@ -856,7 +856,7 @@
                 Physiological and pacemaker settings
             </a>
             <p style="margin-top: 6px; color: #777; font-size: 0.7rem; line-height: 1.5;">
-                CAPTURE <span id="versionStamp">v2026-07-12.6</span> © 2026 Tim Bowles ·
+                CAPTURE <span id="versionStamp">v2026-07-12.7</span> © 2026 Tim Bowles ·
                 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
                    target="_blank" rel="noopener noreferrer"
                    style="color: #999; text-decoration: underline;">CC BY-NC-SA 4.0</a>
@@ -1419,6 +1419,11 @@ care of a real patient.
             retrogradeVA: null,   // ms for a ventricular impulse to conduct BACKWARDS
                                   // to the atrium. The substrate for pacemaker-
                                   // mediated tachycardia. null = no VA conduction.
+            bpRateDependence: null, // {adequateRate, lowFactor} -> this patient's
+                                  // cardiac output is rate-dependent: while the
+                                  // ventricular rate sits below adequateRate the
+                                  // arterial pressure sags to lowFactor of normal,
+                                  // and restoring an adequate rate restores it.
             transcutaneous: false // external backup pacing running (always captures)
         };
 
@@ -1554,6 +1559,8 @@ care of a real patient.
 
         // Arterial model
         const ART_FLOOR = 45;          // mmHg the pressure decays toward with no output
+        let bpFactor = 1;              // smoothed rate-support scaling of the arterial
+                                       // wave (see PATIENT_DEFAULTS.bpRateDependence)
 
         function recordVentEvent(time) {
             ventEventTimes.push(time);
@@ -2254,11 +2261,18 @@ care of a real patient.
             }
 
             // Arterial line: superimpose the runoff of every recent mechanical beat.
+            // A rate-dependent patient's whole pressure waveform scales by a factor
+            // that drifts (tau ~5 s) toward normal while the recent ventricular rate
+            // is adequate and sags while it is not -- so restoring an effective rate
+            // visibly restores the pressure a few beats later, not on a switch.
+            const bpDep = patient.bpRateDependence;
+            const bpTarget = (!bpDep || getMeasuredHR() >= bpDep.adequateRate) ? 1 : bpDep.lowFactor;
+            bpFactor += (bpTarget - bpFactor) * (DT / 5000);
             let artSample = ART_FLOOR;
             for (const t of ventEventTimes) {
                 const dt = simTime - t;
                 if (dt >= 0 && dt < 2000) {
-                    artSample = Math.max(artSample, arterialWave(dt));
+                    artSample = Math.max(artSample, ART_FLOOR + (arterialWave(dt) - ART_FLOOR) * bpFactor);
                 }
             }
 
@@ -2918,18 +2932,25 @@ care of a real patient.
                     'Recognise oversensing as a cause of inappropriate pacing pauses',
                     'Correct the sensitivity, and know the patient\'s safety net'
                 ],
-                vignette: 'Monitor shows intermittent long pauses. The output seems to keep cutting out.',
+                vignette: 'Monitor shows intermittent long pauses. The output seems to keep cutting out, and the pressure is soft.',
                 // Re-tests Scenarios 1 and 3. The V channel is set at 0.8 mV --
                 // sensitive enough to see a 1.5 mV muscle artefact, which it
                 // mistakes for intrinsic activity and inhibits on. The patient's
                 // own rhythm is a slow ventricular escape at 40, so the pauses
                 // matter. The window that fixes it: above 1.5 mV (ignore the
                 // artefact), below 8 mV (still see real beats).
+                //
+                // Rate-dependent BP raises the stakes: at the escape rate the
+                // patient is hypotensive (~80 systolic), and EITHER fix --
+                // correcting the sensitivity or bridging with ASYNC -- restores
+                // an effective 60/min and with it the pressure, a few beats
+                // later. The haemodynamic recovery is the proof the fix worked.
                 deviceSetup:  { mode: 'VVI', rate: 60, vOutput: 5, vSensing: 0.5 },
                 patientSetup: {
                     atrialRate: 0, avConduction: false, escape: { focus: 'ventricular', rate: 40 },
                     vThreshold: 3, vAmplitude: 8,
-                    noise: { channel: 'V', amplitude: 1.5, rate: 100 }
+                    noise: { channel: 'V', amplitude: 1.5, rate: 100 },
+                    bpRateDependence: { adequateRate: 55, lowFactor: 0.5 }
                 },
                 timeline: [],
                 debrief: `<h4>The diagnosis</h4>
@@ -2940,9 +2961,9 @@ care of a real patient.
                     </ul>
                     <h4>The fix</h4>
                     <ul>
-                      <li>Make the box <b>less sensitive → RAISE the mV</b>. The artefact is about 1.5 mV and the real R wave is 8 mV, so there is a window: anywhere above ~1.5 and comfortably below 8. Around <b>3 mV</b> ignores the noise and still sees every real beat. Pacing at 60 returns immediately.</li>
-                      <li>Then check the patient's safety net (Scenario 1): what is underneath, and would those pauses have killed them? Here, an escape at 40 — poor, but present.</li>
-                      <li>If they were unstable, <b>ASYNC (VOO)</b> is a bridge: it paces blind on its timers and cannot be fooled by noise. Try it — the pauses stop instantly.</li>
+                      <li>Make the box <b>less sensitive → RAISE the mV</b>. The artefact is about 1.5 mV and the real R wave is 8 mV, so there is a window: anywhere above ~1.5 and comfortably below 8. Around <b>3 mV</b> ignores the noise and still sees every real beat. Pacing at 60 returns immediately — and watch the arterial line: the pressure climbs back to normal over the next few beats. This patient's output is rate-dependent, and the haemodynamic recovery is the proof the fix worked.</li>
+                      <li>Then check the patient's safety net (Scenario 1): what is underneath, and would those pauses have killed them? Here, an escape at 40 — poor, but present, and not enough to hold the pressure.</li>
+                      <li>If they were unstable, <b>ASYNC (VOO)</b> is a bridge: it paces blind on its timers and cannot be fooled by noise. Try it — the pauses stop instantly and the pressure recovers just the same. Either route works because either route restores the rate.</li>
                     </ul>
                     <h4>Common errors</h4>
                     <ul>
@@ -3281,6 +3302,11 @@ care of a real patient.
             // ALREADY fully suppressed. That is the state the trainee inherits, and
             // it is the whole reason the pause looks the way it does.
             escapeSuppression = (patient.escape && patient.escape.overdriveSuppression) ? 1 : 0;
+
+            // A rate-dependent patient ARRIVES at the pressure their current rate
+            // supports -- hypotensive if the fault is already costing them rate --
+            // rather than starting normal and sagging in front of the trainee.
+            bpFactor = patient.bpRateDependence ? patient.bpRateDependence.lowFactor : 1;
 
             // Identical seed every time: a scenario that looks irregular but
             // replays exactly, so it can be validated and fairly assessed.

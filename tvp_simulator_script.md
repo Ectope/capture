@@ -348,9 +348,10 @@ Dependence still dictates how hard you push everything that follows, which is wh
 - Mode VVI, rate 60, sensitivity set too **low in mV** (too sensitive, e.g. 0.8 mV)
 - Simulator injects oversensed signal (T waves or "muscle activity" artefact) → inappropriate inhibition → pauses
 - Underlying rhythm slow (~40) so pauses are symptomatic
+- Patient's output is rate-dependent: hypotensive (~80 systolic) at the escape rate, normalising once an effective rate near 60 is restored
 
 **Vignette**
-> "Monitor shows intermittent long pauses. The output seems to keep cutting out."
+> "Monitor shows intermittent long pauses. The output seems to keep cutting out, and the pressure is soft."
 
 **Correct actions**
 - Recognise pauses = inhibition, and that **no spike appears** during them (output being withheld, not failing)
@@ -361,8 +362,10 @@ Dependence still dictates how hard you push everything that follows, which is wh
 
 **Expected simulator behaviour (✓)**
 - ✓ Inappropriate inhibition/pauses with no output during oversensed events
+- ✓ Hypotension while the effective rate sits at the escape (~40)
 - ✓ Raising mV abolishes the inhibition
 - ✓ Switching to VOO paces regardless of sensed noise (validates asynchronous mode)
+- ✓ Either fix restores pacing at 60, and the arterial pressure normalises over the next few beats
 
 **Common errors**
 - Treating pauses as output failure and chasing connections first

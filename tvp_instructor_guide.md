@@ -1,21 +1,23 @@
 # Temporary Transvenous Pacing: Instructor Guide
 
-A simulator-based teaching pack for junior ICU staff. Twelve scenarios, beginner to advanced, built to be run in order. The early scenarios teach one skill at a time. The later ones break things, and the only way to fix them is to go back and use a skill you learned earlier. That repetition is the point, so resist the urge to skip the "easy" ones.
+A simulator-based teaching pack for junior ICU staff. Twelve scenariosbuilt to run in order to take a novice through basic to intermediate checks and scenarios. The early scenarios teach one skill at a time. The later ones break things, and the only way to fix them is to go back and use a skill you learned earlier. That repetition is the point, so resist the urge to skip the "easy" ones.
 
 Device is a generic dual-chamber external generator. Controls are described generically. Sub in your unit's actual values before you run it.
 
 ---
 
-## Before you start: two things to teach on day one
+## Before you start: Things to teach on day one
 
-**Dependence decides everything.** Before anyone touches a threshold, they establish whether the patient has an underlying rhythm. On a dependent patient, threshold testing can induce asystole. It's the riskiest routine thing we do with these boxes, and it looks trivial, which is exactly why juniors get casual with it. Scenario 1 exists to drill this before anything else.
+**This simulation only covers the actual pacing box** Please stress during teaching the checking of the physical circuit- the connections at each end of the lead, wire position, batteries etc.
+
+**Dependence decides everything.** Before anyone touches a threshold, they establish whether the patient has an underlying rhythm. It is important that learners not panic in the event iof establishing pacemaker dependence, and knows the implications of this, both for further checks, and for management of the patient on an ongoing basis.
 
 **The sensitivity numbers run backwards.** Sensitivity is a threshold in millivolts, not a "how keen is it" dial.
 
 - Lower mV = more sensitive (reacts to smaller signals)
 - Higher mV = less sensitive
 
-So "turn the sensitivity down" means nothing useful. Make people say "more sensitive, lower the mV" or "less sensitive, raise the mV". Undersensing (missing real beats) needs more sensitivity, a lower mV. Oversensing (reacting to noise) needs less, a higher mV. Every cohort gets this backwards at least once. Correct it early and keep correcting it.
+So "turn the sensitivity down" means nothing useful. Make people say "more sensitive, lower the mV" or "less sensitive, raise the mV". Undersensing (missing real beats) needs more sensitivity, a lower mV. Oversensing (reacting to noise) needs less, a higher mV. Many learners get this wrong, and sloppy language around it is unhelpful- establish this early and keep stressing it.
 
 ## Numbers to have in your head
 
@@ -24,13 +26,13 @@ So "turn the sensitivity down" means nothing useful. Make people say "more sensi
 - A normally sensed R wave is 2 to 5 mV.
 - AV delay 100 to 200 ms.
 
-The 2 to 3x output margin and the roughly 2:1 sensing margin are convention, not trial-derived. Worth saying out loud so trainees don't think there's an RCT behind them.
+The 2 to 3x output margin and the roughly 2:1 sensing margin are convention, not trial-derived. 
 
 ---
 
 # Tier 1: one skill at a time
 
-Run these on a stable, cooperative patient. No troubleshooting yet. You're building the motor pattern.
+Tier 1 is basic checks in a stable patient. No troubleshooting yet. You're building the motor pattern.
 
 ## 1. Establish dependence, and fail safely
 
@@ -44,7 +46,7 @@ This is the gateway. Nobody threshold-tests in later scenarios until they've sho
 
 **Where they trip:** switching the box off instead of winding it down. Not watching the art line while they do it. Walking away without restoring the settings.
 
-**Debrief:** the manoeuvre is mechanically nothing and clinically the most dangerous routine thing on the list. On a dependent patient, done carelessly, you've just caused asystole. Establishing dependence is a prerequisite, not a box to tick.
+**Debrief:** the manoeuvre is mechanically nothing and clinically, if not managed correctly, the most dangerous routine thing on the list. On a dependent patient, done carelessly, you've just caused asystole. Establishing dependence is a prerequisite, not a box to tick.
 
 ## 1b. The dependent patient
 
@@ -54,7 +56,7 @@ Same drill, opposite patient. Run it straight after 1 so the contrast lands.
 
 **Brief them:** "Same check, different patient."
 
-**What good looks like:** they wind down, see the pause, recognise the patient is dependent, and restore the rate promptly rather than sitting on a pause waiting to see what turns up. They name it: dependent, escape suppressed and slow. Then the backup sentence out loud: if I'm going to test thresholds here, I want pads on, drugs available, and a senior aware, in case something else fails while I'm in the middle of it.
+**What good looks like:** they wind down, see the pause, recognise the patient is dependent, and restore the rate promptly rather than sitting on a pause waiting to see what turns up. They name it: dependent, escape suppressed and slow. They should understand the implications of this in terms of emergency planning, and consideration of whether backup is required for testing threshold etc.
 
 **Where they trip:** two opposite errors, and both are worth catching. Panicking at a 10 to 20 second pause and calling an arrest when all they need to do is turn the box back up. Or the reverse, leaving it inhibited too long "to see the underlying rhythm" while the escape is still suppressed.
 
@@ -66,9 +68,9 @@ Same drill, opposite patient. Run it straight after 1 so the contrast lands.
 
 **What good looks like:** they confirm 1:1 capture with the paced rate above intrinsic, wind the output down until the spike stops producing a QRS, note that number as the threshold, then set output to 2 to 3 times it.
 
-**Where they trip:** calling loss of capture "loss of output" (the spike is still there, so output is fine). Setting output barely above threshold with no margin. Testing at a rate below intrinsic, so the patient's own beats hide the loss of capture.
+**Where they trip:** calling loss of capture "loss of output" (the spike is still there, so output is fine). Setting output barely above threshold with no margin. Testing at a rate below intrinsic, so the patient's own beats hide the loss of capture. This stresses the difference between failure to pace (seen by the absence of pacing spike or pace light on box) and failure to capture (absent QRS) or mechanical failure (absence of arterial pulse wave).
 
-**Debrief:** threshold should be under 1 mA. A rising one points to trouble at the lead-tissue interface: oedema, fibrosis, dislodgement. And separate electrical capture (a QRS) from mechanical capture (a pulse on the art line). Confirm both.
+**Debrief:** threshold should be under 1 mA. A rising one points to either trouble at the lead-tissue interface: oedema, fibrosis, dislodgement, or alterations in patient electro-physiology: ischaemia, electrolyte disturbance (particularly hyperkalaemia), acidosis, hypoxia. Also remember anti-arrythmic drugs can alter the threshold, as can recent cardioversion. And separate electrical capture (a QRS) from mechanical capture (a pulse on the art line). Confirm both.
 
 ## 3. Ventricular sensing threshold
 
@@ -86,7 +88,7 @@ Now string it together, both chambers.
 
 **Set up:** DDD, rate 70, AV 160 ms, atrial output 8 mA, ventricular 5 mA. Atrial threshold 2 mA, ventricular 1 mA. Underlying sinus around 55 with intact conduction, not dependent.
 
-**What good looks like, in order:** circuit and connections first (patient, leads, correct ports, box, battery), then mode and rate, then dependence, then capture thresholds both chambers with margins set, then sensing both chambers, then document everything and confirm you've left it capturing.
+**What good looks like, in order:** Verbalise checking circuit and connections first (patient, leads, correct ports, box, battery), then mode and rate, then dependence, then capture thresholds both chambers with margins set, then sensing both chambers, then document everything and confirm you've left it capturing.
 
 **Where they trip:** diving straight to the numbers without checking the circuit. Testing thresholds before establishing dependence. Not documenting.
 
@@ -124,11 +126,11 @@ Each of these can only be solved by going back and running a Tier 1 skill. Tell 
 
 ## 7. Oversensing
 
-**Set up:** VVI, rate 60, sensitivity set too low in mV (too sensitive, 0.8 mV). Feed in oversensed signal, T waves or muscle artefact, so the box inhibits inappropriately and drops pauses. Underlying rhythm slow, around 40, so the pauses matter.
+**Set up:** VVI, rate 60, sensitivity set too low in mV (too sensitive, 0.8 mV). Feed in oversensed signal, T waves or muscle artefact, so the box inhibits inappropriately and drops pauses. Underlying rhythm slow, around 40, so the pauses matter — and the patient is hypotensive (around 80 systolic) until an effective rate near 60 is back.
 
-**Brief them:** "Intermittent long pauses, and the output keeps cutting out."
+**Brief them:** "Intermittent long pauses, the output keeps cutting out, and the pressure is soft."
 
-**What good looks like:** they notice there's no spike during the pauses, so the box is withholding output, not failing to produce it. They name oversensing, make the box less sensitive by raising the mV, and check whether the patient is safe during pauses. If unstable, they know VOO is a bridge to buy time.
+**What good looks like:** they notice there's no spike during the pauses, so the box is withholding output, not failing to produce it. They name oversensing, make the box less sensitive by raising the mV, and check whether the patient is safe during pauses. If unstable, they know VOO is a bridge to buy time. Either fix restores the rate, and they watch the pressure come back up with it — the haemodynamic recovery is the confirmation.
 
 **Where they trip:** treating pauses as output failure and chasing connections. Raising the output, which does nothing for a sensing problem. Forgetting that VOO throws away R-on-T protection, so it's a bridge and not a fix.
 
@@ -138,7 +140,7 @@ Each of these can only be solved by going back and running a Tier 1 skill. Tell 
 
 **Set up:** VVI, rate 70, inject a loose connection or cable fault so there's no output and no spikes. Underlying rhythm around 35, symptomatic.
 
-**Brief them:** "It's doing nothing and the rate's 35."
+**Brief them:** "It's doing nothing and the rate's 35. Patient is feeling faint and clammy."
 
 **What good looks like:** absent spikes tells them output failure, not failure to capture. They work the circuit end to end (patient, lead, ports, cable, box, battery), take output to max, and connect the box straight to the lead if they suspect the cable. Asynchronous mode if oversensing is the culprit. Crucially, they get transcutaneous pacing and chronotropes ready while they work rather than after.
 
@@ -214,5 +216,3 @@ The capstone. Everything from Tier 1, compressed into a crisis.
 4. ecgwaves.com, *Assessment of Pacemaker Malfunction* (2025). Malfunction taxonomy: failure to pace and capture, over- and undersensing, cross-talk, PMT.
 5. Yartsev A, *Troubleshooting the pacemaker circuit*, Deranged Physiology (2024). Reverse-lead and unipolar conversion, capture-threshold method.
 6. Nayak HM et al, *Pacemaker Troubleshooting: Common Clinical Scenarios*, PMC5067035. Causes of under- and oversensing.
-
-Recommended faculty reading: Reade MC, *Temporary epicardial pacing after cardiac surgery: a practical review. Part 2*, Anaesthesia 2007;62(4):364-73 (PMID 17381573). Written for epicardial pacing, but the troubleshooting logic transfers directly. (Citation details from the LITFL reference list, not re-confirmed against PubMed.)
