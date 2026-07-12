@@ -53,15 +53,23 @@
             min-height: 100vh;
             padding: 12px 20px;
         }
+        /* One header row: title and subtitle on the left, mode tabs on the
+           right — keeps the controls above the fold on shorter screens. */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            max-width: 1400px;
+            margin: 0 auto 12px;
+        }
         h1 {
-            text-align: center;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             color: #00d4aa;
             letter-spacing: 3px;
         }
         .subtitle {
-            text-align: center;
-            margin-bottom: 12px;
             color: #888;
             font-size: 0.85rem;
             letter-spacing: 1px;
@@ -337,9 +345,12 @@
         }
 
         /* Monitor Panel */
-        .monitor {
+        /* The monitor and the disclaimer beneath it share one flex column. */
+        .monitor-column {
             flex: 1;
             min-width: 500px;
+        }
+        .monitor {
             background: #0a0a14;
             border-radius: 12px;
             padding: 20px;
@@ -436,10 +447,10 @@
         .overlay-close:hover { color: #eee; }
 
         /* Safety notice. Deliberately always visible and never dismissible: this
-           is now on a public URL and can be found by people nobody has taught. */
+           is now on a public URL and can be found by people nobody has taught.
+           Sits under the monitor, inside the monitor column. */
         .disclaimer {
-            max-width: 940px;
-            margin: 0 auto 14px;
+            margin-top: 14px;
             padding: 9px 16px;
             border: 1px solid #6a5a2a;
             border-left: 4px solid #ffaa00;
@@ -448,16 +459,13 @@
             color: #c9bda2;
             font-size: 0.74rem;
             line-height: 1.55;
-            text-align: center;
         }
         .disclaimer strong { color: #ffaa00; }
 
         /* Mode tabs: sandbox vs teaching */
         .mode-tabs {
             display: flex;
-            justify-content: center;
             gap: 8px;
-            margin-bottom: 14px;
         }
         .mode-tab {
             background: #2a2a3a;
@@ -589,21 +597,16 @@
     </style>
 </head>
 <body>
-    <h1>CAPTURE</h1>
-    <p class="subtitle">Cardiac And Pacing Training Using Realistic Emulation</p>
-
-    <div class="disclaimer" role="note">
-        <strong>Simulation for education only — not for guiding patient care.</strong>
-        Every value, threshold and procedure here is a teaching approximation and must be
-        confirmed against your local policy and the manual of the device you are actually
-        using. It is a teaching aid, designed as an adjunct to experienced clinical
-        instruction — not a substitute for it.
-    </div>
-
-    <div class="mode-tabs">
-        <button class="mode-tab active" id="tabSandbox" data-mode="sandbox">Sandbox</button>
-        <button class="mode-tab" id="tabTeaching" data-mode="teaching">Teaching</button>
-    </div>
+    <header class="page-header">
+        <div>
+            <h1>CAPTURE</h1>
+            <p class="subtitle">Cardiac And Pacing Training Using Realistic Emulation</p>
+        </div>
+        <div class="mode-tabs">
+            <button class="mode-tab active" id="tabSandbox" data-mode="sandbox">Sandbox</button>
+            <button class="mode-tab" id="tabTeaching" data-mode="teaching">Teaching</button>
+        </div>
+    </header>
 
     <div class="container" id="mainContainer">
         <!-- Pacing Device -->
@@ -737,6 +740,7 @@
         </div>
 
         <!-- Monitor Display -->
+        <div class="monitor-column">
         <div class="monitor">
             <h2>PATIENT MONITOR</h2>
 
@@ -764,6 +768,15 @@
                     <div class="value yellow" id="pacedDisplay">A+V</div>
                 </div>
             </div>
+        </div>
+
+        <div class="disclaimer" role="note">
+            <strong>Simulation for education only — not for guiding patient care.</strong>
+            Every value, threshold and procedure here is a teaching approximation and must be
+            confirmed against your local policy and the manual of the device you are actually
+            using. It is a teaching aid, designed as an adjunct to experienced clinical
+            instruction — not a substitute for it.
+        </div>
         </div>
 
         <!-- Teaching: its own column, so the vignette and the actions sit beside
